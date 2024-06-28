@@ -157,6 +157,7 @@ test_that('simulate_infection integrates different types of infection and schedu
     schedule_mock,
     1,
     variables,
+    NULL,
     clinical,
     treated,
     infected,
@@ -659,6 +660,7 @@ test_that('schedule_infections correctly schedules new infections', {
   
   schedule_infections(
     variables,
+    NULL,
     clinical_infections,
     treated,
     infections,
