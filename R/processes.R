@@ -43,15 +43,23 @@ create_processes <- function(
     create_exponential_decay_process(variables$ivm, parameters$rvm),
     # Acquired immunity
     create_exponential_decay_process(variables$ica, parameters$rc),
-    create_exponential_decay_process(variables$iva, parameters$rva),
-    create_exponential_decay_process(variables$id, parameters$rid)
+    create_exponential_decay_process(variables$iva, parameters$rva)
   )
   
   if(parameters$parasite == "falciparum"){
     processes <- c(
       processes,
       # Blood immunity
-      create_exponential_decay_process(variables$ib, parameters$rb)
+      create_exponential_decay_process(variables$ib, parameters$rb),
+      # Immunity to detectability
+      create_exponential_decay_process(variables$id, parameters$rid)
+    )
+  } else if (parameters$parasite == "vivax"){
+    processes <- c(
+      processes,
+      # Anti-parasite immunity
+      create_exponential_decay_process(variables$iam, parameters$rm),
+      create_exponential_decay_process(variables$iaa, parameters$ra)
     )
   }
 
@@ -118,6 +126,7 @@ create_processes <- function(
   processes <- c(
     processes,
     create_recovery_rates_process(
+      parameters,
       variables,
       recovery_outcome
     ),
@@ -176,9 +185,11 @@ create_processes <- function(
   # Rendering
   # =========
   
-  imm_var_names <- c('ica', 'icm', 'id', 'iva', 'ivm')
+  imm_var_names <- c('ica', 'icm', 'iva', 'ivm')
   if(parameters$parasite == "falciparum"){
-    imm_var_names <- c(imm_var_names, 'ib')
+    imm_var_names <- c(imm_var_names, 'ib', 'id')
+  } else if (parameters$parasite == "vivax"){
+    imm_var_names <- c(imm_var_names, 'iaa', 'iam')
   }
 
   processes <- c(

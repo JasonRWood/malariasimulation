@@ -6,11 +6,22 @@
 #' @param recovery_outcome competing hazards object for recovery rates
 #' @noRd
 create_recovery_rates_process <- function(
+  parameters,
   variables,
   recovery_outcome
 ) {
   function(timestep){
-    recovery_outcome$set_rates(variables$recovery_rates$get_values())
+    recovery_rates <- variables$recovery_rates$get_values()
+    if (parameters$parasite == "vivax"){
+      # p.v subpatent recovery is immunity-dependent
+      recovery_rates[variables$state$get_index_of("U")$to_vector()] <-
+        1/anti_parasite_immunity(
+          parameters$dpcr_min, parameters$dpcr_max, parameters$apcr50, parameters$kpcr,
+          variables$iaa$get_values(index = variables$state$get_index_of("U")),
+          variables$iam$get_values(index = variables$state$get_index_of("U"))
+        )
+    }
+    recovery_outcome$set_rates(recovery_rates)
   }
 }
 
