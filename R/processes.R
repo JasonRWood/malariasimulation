@@ -41,13 +41,19 @@ create_processes <- function(
     # Maternal immunity
     create_exponential_decay_process(variables$icm, parameters$rm),
     create_exponential_decay_process(variables$ivm, parameters$rvm),
-    # Blood immunity
-    create_exponential_decay_process(variables$ib, parameters$rb),
     # Acquired immunity
     create_exponential_decay_process(variables$ica, parameters$rc),
     create_exponential_decay_process(variables$iva, parameters$rva),
     create_exponential_decay_process(variables$id, parameters$rid)
   )
+  
+  if(parameters$parasite == "falciparum"){
+    processes <- c(
+      processes,
+      # Blood immunity
+      create_exponential_decay_process(variables$ib, parameters$rb)
+    )
+  }
 
   if (parameters$individual_mosquitoes) {
     processes <- c(
@@ -169,6 +175,12 @@ create_processes <- function(
   # =========
   # Rendering
   # =========
+  
+  imm_var_names <- c('ica','icm','id','iva','ivm')
+  if(parameters$parasite == "falciparum"){
+    imm_var_names <- c(imm_var_names,'ib')
+  }
+
   processes <- c(
     processes,
     individual::categorical_count_renderer_process(
@@ -178,8 +190,8 @@ create_processes <- function(
     ),
     create_variable_mean_renderer_process(
       renderer,
-      c('ica', 'icm', 'ib', 'id', 'iva', 'ivm'),
-      variables[c('ica', 'icm', 'ib', 'id', 'iva', 'ivm')]
+      imm_var_names,
+      variables[imm_var_names]
     ),
     create_prevelance_renderer(
       variables$state,
