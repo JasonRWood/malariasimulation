@@ -1,18 +1,16 @@
 #' @title Get model parameters
 #' @description
 #' get_parameters creates a named list of parameters for use in the model. These
-#' parameters are passed to process functions. The default parameters, which
+#' parameters are passed to process functions. 
+#' 
+#' The default parameters, which
 #' are for Plasmodium falciparum, are explained in
 #' "The US President's Malaria Initiative, Plasmodium falciparum transmission
 #' and mortality: A modelling study."
 #'
 #' Plasmodium vivax specific parameters are explained in
 #' "Mathematical modelling of the impact of expanding levels of malaria control
-#' interventions on Plasmodium vivax." by White, Michael T., et al. with parameter
-#' values found in "Accelerating towards P. vivax elimination with a novel
-#' serological test-and-treat strategy: a modelling case study in Brazil" by
-#' Nekkab, Narimane T.,et al. or online repository:
-#' https://github.com/MWhite-InstitutPasteur/Pvivax_TQ_IBM.
+#' interventions on Plasmodium vivax." by White, Michael T., et al.
 #'
 #' @param overrides a named list of parameter values to use instead of defaults
 #' @param parasite Plasmodium parasite species ("falciparum" or "vivax"); default = "falciparum"
@@ -319,7 +317,7 @@
 #' and PCR prevalence; default = -0.968
 #' * rdt_coeff - the coefficient for the log logit relationship betweeen rdt
 #' and PCR prevalence; default = 1.186
-#'
+#' 
 #' miscellaneous:
 #'
 #' * mosquito_limit - the maximum number of mosquitoes to allow for in the
@@ -354,7 +352,7 @@ get_parameters <- function(overrides = list(), parasite = "falciparum") {
     # parasite incubation periods
     # hypnozoite parameters (p.v only)
     malariasimulation::parasite_parameters[[parasite]],
-    
+
     list(
       # parasite
       parasite = parasite,
