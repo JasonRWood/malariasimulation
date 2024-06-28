@@ -174,3 +174,68 @@ test_that('that vivax patent prevalence rendering works', {
   )
   
 })
+
+test_that('Test default vivax incidence rendering works', {
+  
+  timestep <- 0
+  year <- 365
+  birth <- individual::IntegerVariable$new(
+    -c(2, 5, 10, 11) * year
+  )
+  vivax_parameters <- get_parameters(
+    parasite = "vivax")
+  
+  renderer <- mock_render(1)
+  incidence_renderer(
+    birth,
+    renderer,
+    individual::Bitset$new(4)$insert(c(1, 2, 4)),
+    'inc_patent_',
+    c(0, 2) * year,
+    c(5, 10) * year,
+    timestep
+  )
+  
+  incidence_probability_renderer(
+    birth,
+    renderer,
+    individual::Bitset$new(4)$insert(seq(4)),
+    c(.1, .2, .3, .4),
+    'inc_patent_',
+    c(0, 2) * year,
+    c(5, 10) * year,
+    timestep
+  )
+  
+  mockery::expect_args(
+    renderer$render_mock(),
+    1,
+    'n_inc_patent_0_1825',
+    2,
+    timestep
+  )
+  
+  mockery::expect_args(
+    renderer$render_mock(),
+    2,
+    'n_inc_patent_730_3650',
+    2,
+    timestep
+  )
+  
+  mockery::expect_args(
+    renderer$render_mock(),
+    3,
+    'p_inc_patent_0_1825',
+    0.3,
+    timestep
+  )
+  
+  mockery::expect_args(
+    renderer$render_mock(),
+    4,
+    'p_inc_patent_730_3650',
+    .6,
+    timestep
+  )
+})
