@@ -10,12 +10,14 @@
 #' * birth - an integer representing the timestep when this individual was born
 #' * last_boosted_* - the last timestep at which this individual's immunity was
 #' boosted for tracking grace periods in the boost of immunity
+#' * IAM - Maternal anti-parasite immunity (p.v only)
 #' * ICM - Maternal immunity to clinical disease
 #' * IVM - Maternal immunity to severe disease
 #' * IB  - Pre-erythoctic immunity (p.f only)
+#' * IAA  - Acquired anti-parasite immunity (p.v only)
 #' * ICA  - Acquired immunity to clinical disease
 #' * IVA  - Acquired immunity to severe disease
-#' * ID - Acquired immunity to detectability
+#' * ID - Acquired immunity to detectability (p.f only)
 #' * zeta - Heterogeneity of human individuals
 #' * zeta_group - Discretised heterogeneity of human individuals
 #' * last_pev_timestep - The timestep of the last pev vaccination (-1 if there
@@ -98,7 +100,6 @@ create_variables <- function(parameters) {
   birth <- individual::IntegerVariable$new(-initial_age)
   last_boosted_ica <- individual::DoubleVariable$new(rep(-1, size))
   last_boosted_iva <- individual::DoubleVariable$new(rep(-1, size))
-  last_boosted_id <- individual::DoubleVariable$new(rep(-1, size))
 
   # Maternal immunity
   icm <- individual::DoubleVariable$new(
@@ -136,6 +137,45 @@ create_variables <- function(parameters) {
         'IB'
       )
     )
+    
+    # Acquired immunity to detectability
+    last_boosted_id <- individual::DoubleVariable$new(rep(-1, size))
+    id <- individual::DoubleVariable$new(
+      initial_immunity(
+        parameters$init_id,
+        initial_age,
+        groups,
+        eq,
+        parameters,
+        'ID'
+      )
+    )
+    
+  } else if (parameters$parasite == "vivax"){
+    # Acquired anti-parasite immunity
+    last_boosted_iaa <- individual::DoubleVariable$new(rep(-1, size))
+    iaa <- individual::DoubleVariable$new(
+      initial_immunity(
+        parameters$init_iaa,
+        initial_age,
+        groups,
+        eq,
+        parameters,
+        'IAA'
+      )
+    )
+    
+    # Maternal anti-parasite immunity
+    iam <- individual::DoubleVariable$new(
+      initial_immunity(
+        parameters$init_iam,
+        initial_age,
+        groups,
+        eq,
+        parameters,
+        'IAM'
+      )
+    )
   }
   
   # Acquired immunity to clinical disease
@@ -158,17 +198,6 @@ create_variables <- function(parameters) {
       eq,
       parameters,
       'IVA'
-    )
-  )
-  # Acquired immunity to detectability
-  id <- individual::DoubleVariable$new(
-    initial_immunity(
-      parameters$init_id,
-      initial_age,
-      groups,
-      eq,
-      parameters,
-      'ID'
     )
   )
 
@@ -205,7 +234,17 @@ create_variables <- function(parameters) {
   recovery_values <- rep(0, get_human_population(parameters, 0))
   recovery_values[diseased] <- 1/parameters$dd
   recovery_values[asymptomatic] <- 1/parameters$da
-  recovery_values[subpatent] <- 1/parameters$du
+  if(parameters$parasite == "falciparum"){
+    # p.f subpatent recovery rate is constant
+    recovery_values[subpatent] <- 1/parameters$du
+  } else if (parameters$parasite == "vivax"){
+    # p.v subpatent recovery rate is immunity-dependent
+    recovery_values[subpatent] <- 1/anti_parasite_immunity(
+      parameters$dpcr_min, parameters$dpcr_max, parameters$apcr50, parameters$kpcr,
+      iaa$get_values(subpatent),
+      iam$get_values(subpatent)
+    )
+  }
   recovery_values[treated] <- 1/parameters$dt
 
   # Initialise the recovery rate variable
@@ -229,12 +268,10 @@ create_variables <- function(parameters) {
     birth = birth,
     last_boosted_ica = last_boosted_ica,
     last_boosted_iva = last_boosted_iva,
-    last_boosted_id = last_boosted_id,
     icm = icm,
     ivm = ivm,
     ica = ica,
     iva = iva,
-    id = id,
     zeta = zeta,
     zeta_group = zeta_group,
     infectivity = infectivity,
@@ -252,7 +289,15 @@ create_variables <- function(parameters) {
   if(parameters$parasite == "falciparum"){
     variables <- c(variables,
                    last_boosted_ib = last_boosted_ib,
-                   ib = ib
+                   last_boosted_id = last_boosted_id,
+                   ib = ib,
+                   id = id
+    )
+  } else if (parameters$parasite == "vivax"){
+    variables <- c(variables,
+                   last_boosted_iaa = last_boosted_iaa,
+                   iaa = iaa,
+                   iam = iam
     )
   }
   
