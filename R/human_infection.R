@@ -180,6 +180,25 @@ infection_outcome_process <- function(
         timestep,
         parameters$ud
       )
+      
+      clinical_infections <- calculate_clinical_infections(
+        variables,
+        infected_humans,
+        parameters,
+        renderer,
+        timestep
+      )
+      
+      update_severe_disease(
+        timestep,
+        infected_humans,
+        variables,
+        parameters,
+        renderer
+      )
+      
+      patent_infections <- NULL
+      
     } else if (parameters$parasite == "vivax"){
       boost_immunity(
         variables$iaa,
@@ -188,25 +207,25 @@ infection_outcome_process <- function(
         timestep,
         parameters$ua
       )
+      
+      ## Only S and U infections need to be split using the patent infection function
+      patent_infections <- calculate_patent_infections(
+        variables,
+        variables$state$get_index_of(c("S","U"))$and(infected_humans),
+        parameters,
+        renderer,
+        timestep
+      )
+      
+      # Patent level infected S and U, and all A infections to get clinical infections
+      clinical_infections <- calculate_clinical_infections(
+        variables,
+        variables$state$get_index_of("A")$and(infected_humans)$or(patent_infections),
+        parameters,
+        renderer,
+        timestep
+      )
     }
-  }
-  
-  clinical_infections <- calculate_clinical_infections(
-    variables,
-    infected_humans,
-    parameters,
-    renderer,
-    timestep
-  )
-  
-  if(parameters$parasite == "falciparum"){
-    update_severe_disease(
-      timestep,
-      infected_humans,
-      variables,
-      parameters,
-      renderer
-    )
   }
   
   treated <- calculate_treated(
@@ -221,12 +240,60 @@ infection_outcome_process <- function(
   
   schedule_infections(
     variables,
+    patent_infections,
     clinical_infections,
     treated,
     infected_humans,
     parameters,
     timestep
   )
+}
+
+#' @title Calculate patent infections (p.v only)
+#' @description
+#' Sample patent infections from all infections
+#' @param variables a list of all of the model variables
+#' @param infections bitset of infected humans
+#' @param parameters model parameters
+#' @param renderer model render
+#' @param timestep current timestep
+#' @noRd
+calculate_patent_infections <- function(
+    variables,
+    infections,
+    parameters,
+    renderer,
+    timestep
+) {
+  
+  iaa <- variables$iaa$get_values(infections)
+  iam <- variables$iam$get_values(infections)
+  
+  philm <- anti_parasite_immunity(
+    min = parameters$philm_min, max = parameters$philm_max, a50 = parameters$alm50,
+    k = parameters$klm, iaa = iaa, iam = iam)
+  patent_infections <- bitset_at(infections, bernoulli_multi_p(philm))
+  
+  incidence_renderer(
+    variables$birth,
+    renderer,
+    patent_infections,
+    'inc_patent_',
+    parameters$patent_incidence_rendering_min_ages,
+    parameters$patent_incidence_rendering_max_ages,
+    timestep
+  )
+  incidence_probability_renderer(
+    variables$birth,
+    renderer,
+    infections,
+    philm,
+    'inc_patent_',
+    parameters$patent_incidence_rendering_min_ages,
+    parameters$patent_incidence_rendering_max_ages,
+    timestep
+  )
+  patent_infections
 }
 
 #' @title Calculate clinical infections
@@ -459,20 +526,18 @@ calculate_treated <- function(
 #' @noRd
 schedule_infections <- function(
     variables,
+    patent_infections,
     clinical_infections,
     treated,
     infections,
     parameters,
     timestep
 ) {
+  
   included <- treated$not(TRUE)
+  to_infect_clinical <- clinical_infections$and(included)
 
-  to_infect <- clinical_infections$and(included)
-  to_infect_asym <- clinical_infections$copy()$not(TRUE)$and(infections)$and(
-    included
-  )
-
-  if(to_infect$size() > 0) {
+  if(to_infect_clinical$size() > 0) {
     update_infection(
       variables$state,
       'D',
@@ -480,12 +545,14 @@ schedule_infections <- function(
       parameters$cd,
       variables$recovery_rates,
       1/parameters$dd,
-      to_infect
+      to_infect_clinical
     )
   }
 
-  if(to_infect_asym$size() > 0) {
-    if(parameters$parasite == "falciparum"){
+  if(parameters$parasite == "falciparum"){
+    to_infect_asym <- clinical_infections$copy()$not(TRUE)$and(infections)$and(included)
+    
+    if(to_infect_asym$size() > 0){
       # p.f has immunity-determined asymptomatic infectivity
       update_to_asymptomatic_infection(
         variables,
@@ -493,7 +560,12 @@ schedule_infections <- function(
         timestep,
         to_infect_asym
       )
-    } else if (parameters$parasite == "vivax"){
+    }
+  } else if (parameters$parasite == "vivax"){
+    to_infect_subpatent <- variables$state$get_index_of(c('S'))$and(included)$and(infections)$and(patent_infections$not(FALSE))
+    to_infect_asym <- variables$state$get_index_of(c('S',"U"))$and(included)$and(patent_infections)$and(clinical_infections$not(FALSE))
+    
+    if(to_infect_asym$size() > 0){
       # p.v has constant asymptomatic infectivity
       update_infection(
         variables$state,
@@ -502,7 +574,23 @@ schedule_infections <- function(
         parameters$ca,
         variables$recovery_rates,
         1/parameters$da,
-        to_infect
+        to_infect_asym
+      )
+    }
+    if(to_infect_subpatent$size() > 0){
+      # p.v subpatent recovery rate is immunity dependent
+      update_infection(
+        variables$state,
+        'U',
+        variables$infectivity,
+        parameters$cu,
+        variables$recovery_rates,
+        1/anti_parasite_immunity(
+          parameters$dpcr_min, parameters$dpcr_max, parameters$apcr50, parameters$kpcr,
+          variables$iaa$get_values(to_infect_subpatent),
+          variables$iam$get_values(to_infect_subpatent)
+        ),
+        to_infect_subpatent
       )
     }
   }
