@@ -464,12 +464,26 @@ schedule_infections <- function(
   }
 
   if(to_infect_asym$size() > 0) {
-    update_to_asymptomatic_infection(
-      variables,
-      parameters,
-      timestep,
-      to_infect_asym
-    )
+    if(parameters$parasite == "falciparum"){
+      # p.f has immunity-determined asymptomatic infectivity
+      update_to_asymptomatic_infection(
+        variables,
+        parameters,
+        timestep,
+        to_infect_asym
+      )
+    } else if (parameters$parasite == "vivax"){
+      # p.v has constant asymptomatic infectivity
+      update_infection(
+        variables$state,
+        'A',
+        variables$infectivity,
+        parameters$ca,
+        variables$recovery_rates,
+        1/parameters$da,
+        to_infect
+      )
+    }
   }
 }
 

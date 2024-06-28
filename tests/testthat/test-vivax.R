@@ -24,3 +24,41 @@ test_that('Test difference between falciparum and vivax parameter lists', {
   expect_true(all(names(vivax_parameters[!names(vivax_parameters) %in% names(falciparum_parameters)]) %in%
                     c("dpcr_max","dpcr_min","kpcr","apcr50","init_iaa","init_iam","ra","ua","b","philm_min","philm_max","klm","alm50","ca","f","gammal","init_hyp","kmax")))
 })
+
+test_that('Test age structure should not change vivax infectivity', {
+  falc_parameters <- get_parameters(
+    overrides = list(
+      human_population = 1,
+      init_id  = 0.5))
+  
+  vivax_parameters <- get_parameters(
+    parasite = "vivax",
+    overrides = list(
+      human_population = 1,
+      init_id  = 0.5))
+  
+  state_mock <- mockery::mock('A', cycle = T)
+  mockery::stub(create_variables, 'initial_state', state_mock)
+  state_vivax_mock <- mockery::mock(list(human_states = 'A',
+                                         hypnozoites_v = 0), cycle = T)
+  mockery::stub(create_variables, 'initial_state_vivax', state_vivax_mock)
+  
+  ages_mock <- mockery::mock(365, cycle = T)
+  mockery::stub(create_variables, 'calculate_initial_ages', ages_mock)
+  
+  falc_variables <- create_variables(falc_parameters)
+  vivax_variables <- create_variables(vivax_parameters)
+  
+  expect_equal(falc_variables$infectivity$get_values(), 0.06761596)
+  expect_equal(vivax_variables$infectivity$get_values(), 0.1)
+  
+  ages_mock <- mockery::mock(365*70, cycle = T)
+  mockery::stub(create_variables, 'calculate_initial_ages', ages_mock)
+  
+  falc_variables <- create_variables(falc_parameters)
+  vivax_variables <- create_variables(vivax_parameters)
+  
+  expect_equal(falc_variables$infectivity$get_values(), 0.03785879)
+  expect_equal(vivax_variables$infectivity$get_values(), 0.1)
+  
+})
