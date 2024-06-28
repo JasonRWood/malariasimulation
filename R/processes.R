@@ -38,12 +38,9 @@ create_processes <- function(
   # Immunity
   # ========
   processes <- list(
-    # Maternal immunity
+    # Immunity to clinical disease
     create_exponential_decay_process(variables$icm, parameters$rm),
-    create_exponential_decay_process(variables$ivm, parameters$rvm),
-    # Acquired immunity
-    create_exponential_decay_process(variables$ica, parameters$rc),
-    create_exponential_decay_process(variables$iva, parameters$rva)
+    create_exponential_decay_process(variables$ica, parameters$rc)
   )
   
   if(parameters$parasite == "falciparum"){
@@ -51,6 +48,9 @@ create_processes <- function(
       processes,
       # Blood immunity
       create_exponential_decay_process(variables$ib, parameters$rb),
+      # Immunity to severe disease
+      create_exponential_decay_process(variables$ivm, parameters$rvm),
+      create_exponential_decay_process(variables$iva, parameters$rva),
       # Immunity to detectability
       create_exponential_decay_process(variables$id, parameters$rid)
     )
@@ -185,9 +185,9 @@ create_processes <- function(
   # Rendering
   # =========
   
-  imm_var_names <- c('ica','icm','iva','ivm')
+  imm_var_names <- c('ica','icm')
   if(parameters$parasite == "falciparum"){
-    imm_var_names <- c(imm_var_names,'ib','id')
+    imm_var_names <- c(imm_var_names,'ib','iva','ivm','id')
   } else if (parameters$parasite == "vivax"){
     imm_var_names <- c(imm_var_names,'iaa','iam')
   }

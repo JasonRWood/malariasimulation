@@ -12,11 +12,11 @@
 #' boosted for tracking grace periods in the boost of immunity
 #' * IAM - Maternal anti-parasite immunity (p.v only)
 #' * ICM - Maternal immunity to clinical disease
-#' * IVM - Maternal immunity to severe disease
+#' * IVM - Maternal immunity to severe disease (p.f only)
 #' * IB  - Pre-erythoctic immunity (p.f only)
 #' * IAA  - Acquired anti-parasite immunity (p.v only)
 #' * ICA  - Acquired immunity to clinical disease
-#' * IVA  - Acquired immunity to severe disease
+#' * IVA  - Acquired immunity to severe disease (p.f only)
 #' * ID - Acquired immunity to detectability (p.f only)
 #' * zeta - Heterogeneity of human individuals
 #' * zeta_group - Discretised heterogeneity of human individuals
@@ -98,10 +98,8 @@ create_variables <- function(parameters) {
   initial_states <- initial_state(parameters, initial_age, groups, eq, states)
   state <- individual::CategoricalVariable$new(states, initial_states)
   birth <- individual::IntegerVariable$new(-initial_age)
-  last_boosted_ica <- individual::DoubleVariable$new(rep(-1, size))
-  last_boosted_iva <- individual::DoubleVariable$new(rep(-1, size))
-
-  # Maternal immunity
+  
+  # Maternal immunity to clinical disease
   icm <- individual::DoubleVariable$new(
     initial_immunity(
       parameters$init_icm,
@@ -112,18 +110,20 @@ create_variables <- function(parameters) {
       'ICM'
     )
   )
-
-  ivm <- individual::DoubleVariable$new(
+  
+  # Acquired immunity to clinical disease
+  last_boosted_ica <- individual::DoubleVariable$new(rep(-1, size))
+  ica <- individual::DoubleVariable$new(
     initial_immunity(
-      parameters$init_ivm,
+      parameters$init_ica,
       initial_age,
       groups,
       eq,
       parameters,
-      'IVM'
+      'ICA'
     )
   )
-
+  
   if(parameters$parasite == "falciparum"){
     # Pre-erythoctic immunity
     last_boosted_ib <- individual::DoubleVariable$new(rep(-1, size))
@@ -138,7 +138,32 @@ create_variables <- function(parameters) {
       )
     )
     
-    # Acquired immunity to detectability
+    # Maternal immunity to severe disease
+    ivm <- individual::DoubleVariable$new(
+      initial_immunity(
+        parameters$init_ivm,
+        initial_age,
+        groups,
+        eq,
+        parameters,
+        'IVM'
+      )
+    )
+    
+    # Acquired immunity to severe disease
+    last_boosted_iva <- individual::DoubleVariable$new(rep(-1, size))
+    iva <- individual::DoubleVariable$new(
+      initial_immunity(
+        parameters$init_iva,
+        initial_age,
+        groups,
+        eq,
+        parameters,
+        'IVA'
+      )
+    )
+    
+    # Acquired immunity to lm detectability
     last_boosted_id <- individual::DoubleVariable$new(rep(-1, size))
     id <- individual::DoubleVariable$new(
       initial_immunity(
@@ -152,6 +177,18 @@ create_variables <- function(parameters) {
     )
     
   } else if (parameters$parasite == "vivax"){
+    # Maternal anti-parasite immunity
+    iam <- individual::DoubleVariable$new(
+      initial_immunity(
+        parameters$init_iam,
+        initial_age,
+        groups,
+        eq,
+        parameters,
+        'IAM'
+      )
+    )
+    
     # Acquired anti-parasite immunity
     last_boosted_iaa <- individual::DoubleVariable$new(rep(-1, size))
     iaa <- individual::DoubleVariable$new(
@@ -164,43 +201,8 @@ create_variables <- function(parameters) {
         'IAA'
       )
     )
-    
-    # Maternal anti-parasite immunity
-    iam <- individual::DoubleVariable$new(
-      initial_immunity(
-        parameters$init_iam,
-        initial_age,
-        groups,
-        eq,
-        parameters,
-        'IAM'
-      )
-    )
   }
   
-  # Acquired immunity to clinical disease
-  ica <- individual::DoubleVariable$new(
-    initial_immunity(
-      parameters$init_ica,
-      initial_age,
-      groups,
-      eq,
-      parameters,
-      'ICA'
-    )
-  )
-  # Acquired immunity to severe disease
-  iva <- individual::DoubleVariable$new(
-    initial_immunity(
-      parameters$init_iva,
-      initial_age,
-      groups,
-      eq,
-      parameters,
-      'IVA'
-    )
-  )
-
   # Initialise infectiousness of humans -> mosquitoes
   # NOTE: not yet supporting initialisation of infectiousness of Treated individuals
   infectivity_values <- rep(0, get_human_population(parameters, 0))
@@ -267,11 +269,8 @@ create_variables <- function(parameters) {
     state = state,
     birth = birth,
     last_boosted_ica = last_boosted_ica,
-    last_boosted_iva = last_boosted_iva,
     icm = icm,
-    ivm = ivm,
     ica = ica,
-    iva = iva,
     zeta = zeta,
     zeta_group = zeta_group,
     infectivity = infectivity,
@@ -289,8 +288,11 @@ create_variables <- function(parameters) {
   if(parameters$parasite == "falciparum"){
     variables <- c(variables,
                    last_boosted_ib = last_boosted_ib,
+                   last_boosted_iva = last_boosted_iva,
                    last_boosted_id = last_boosted_id,
+                   ivm = ivm,
                    ib = ib,
+                   iva = iva,
                    id = id
     )
   } else if (parameters$parasite == "vivax"){
