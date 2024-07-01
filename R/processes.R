@@ -59,7 +59,8 @@ create_processes <- function(
       processes,
       # Anti-parasite immunity
       create_exponential_decay_process(variables$iam, parameters$rm),
-      create_exponential_decay_process(variables$iaa, parameters$ra)
+      create_exponential_decay_process(variables$iaa, parameters$ra),
+      create_hypnozoite_batch_decay_process(variables$hypnozoites, parameters$gammal)
     )
   }
 
@@ -84,7 +85,8 @@ create_processes <- function(
     targeted_process = function(timestep, target){
       infection_outcome_process(timestep, target, 
                                 variables, renderer, parameters, 
-                                prob = rate_to_prob(infection_outcome$rates))
+                                prob = rate_to_prob(infection_outcome$rates),
+                                relative_rates = infection_outcome$relative_rates)
     },
     size = parameters$human_population
   )
@@ -189,7 +191,23 @@ create_processes <- function(
   if(parameters$parasite == "falciparum"){
     imm_var_names <- c(imm_var_names, 'ib', 'iva', 'ivm', 'id')
   } else if (parameters$parasite == "vivax"){
-    imm_var_names <- c(imm_var_names, 'iaa', 'iam')
+    imm_var_names <- c(imm_var_names, 'iaa', 'iam','hypnozoites')
+    
+    ## hypnozoite infection prevalence rendering
+    processes <- c(
+      processes,
+      create_n_with_hypnozoites_renderer_process(
+        renderer,
+        variables$hypnozoites,
+        parameters
+      ),
+      create_n_with_hypnozoites_age_renderer_process(
+        variables$hypnozoites,
+        variables$birth,
+        parameters,
+        renderer
+      )
+    )
   }
 
   processes <- c(
@@ -343,4 +361,20 @@ create_lagged_eir <- function(variables, solvers, parameters) {
       )
     }
   )
+}
+#' @title Hypnozoite decay function
+#' @description
+#' calulates the number of individuals in whom a batch decay occurs
+#'
+#' @param variable the hypnozoite variable to update
+#' @param rate the hypnozoite decay rate
+#' @noRd
+create_hypnozoite_batch_decay_process <- function(hypnozoites, gammal){
+  function(timestep){
+    to_decay <- bernoulli_multi_p(p = rate_to_prob(hypnozoites$get_values() * gammal))
+    hypnozoites$queue_update(
+      hypnozoites$get_values(to_decay) - 1,
+      to_decay
+    )
+  }
 }

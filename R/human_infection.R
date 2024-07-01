@@ -21,11 +21,11 @@ simulate_infection <- function(
     renderer,
     infection_outcome
 ) {
-  if (bitten_humans$size() > 0) {
+  if (bitten_humans$bitten_humans$size() > 0) {
     if(parameters$parasite == "falciparum"){
       boost_immunity(
         variables$ib,
-        bitten_humans,
+        bitten_humans$bitten_humans,
         variables$last_boosted_ib,
         timestep,
         parameters$ub
@@ -60,18 +60,22 @@ calculate_infections <- function(
     timestep,
     infection_outcome
 ) {
-  source_humans <- variables$state$get_index_of(
-    c('S', 'A', 'U'))$and(bitten_humans)
-
+  
+  if(bitten_humans$bitten_humans$size() == 0){return(bitten_humans$bitten_humans)}
+  
   if(parameters$parasite == "falciparum"){
+    source_humans <- variables$state$get_index_of(c('S','A','U'))$and(bitten_humans$bitten_humans)
+    
     ## p.f models blood immunity
     b <- blood_immunity(variables$ib$get_values(source_humans), parameters)
     
   } else if (parameters$parasite == "vivax"){
-    ## p.v does not model blood immunity
-    b <- parameters$b
+    ## source_humans must include individuals with hypnozoites which may be impacted by prophylaxis/vaccination
+    source_humans <- bitten_humans$bitten_humans$copy()$or(variables$hypnozoites$get_index_of(0)$not(TRUE))
+    bitten_vector <- bitten_humans$bitten_humans$to_vector()
+    ## p.v does not model blood immunity but must take into account multiple bites per person
+    b <- 1-(1-parameters$b)^bitten_humans$n_bites_each
   }
-
   source_vector <- source_humans$to_vector()
 
   # calculate prophylaxis
@@ -114,8 +118,26 @@ calculate_infections <- function(
       alpha[pev_profile]
     )
   }
-
-  prob <- b * (1 - prophylaxis) * (1 - vaccine_efficacy)
+  
+  infection_rates <- rep(0, length = parameters$human_population)
+  if(parameters$parasite == "falciparum"){
+    prob <- b * (1 - prophylaxis) * (1 - vaccine_efficacy)
+    infection_rates[source_vector] <- prob_to_rate(prob)
+    
+  } else if (parameters$parasite == "vivax"){
+    ## calculated rate of infection for all bitten or with hypnozoites
+    relapse_rates <- variables$hypnozoites$get_values() * parameters$f
+    infection_rates[bitten_vector] <- infection_rates[bitten_vector] + prob_to_rate(b)
+    relative_rates <- relapse_rates/infection_rates
+    relative_rates[is.nan(relative_rates)] <- 0
+    
+    infection_outcome$set_relative_rates(relative_rates)
+    
+    ## get relative rates to get probability bitten over relapse
+    prob <- rate_to_prob(infection_rates)
+    prob[source_vector] <- prob[source_vector] * (1 - prophylaxis) * (1 - vaccine_efficacy)
+    infection_rates <- prob_to_rate(prob)
+  }
 
   ## probability of incidence must be rendered at each timestep
   incidence_probability_renderer(
@@ -130,8 +152,6 @@ calculate_infections <- function(
   )
   
   ## capture infection rates to resolve in competing hazards
-  infection_rates <- rep(0, length = parameters$human_population)
-  infection_rates[source_vector] <- prob_to_rate(prob)
   infection_outcome$set_rates(infection_rates)
 }
 
@@ -145,6 +165,7 @@ calculate_infections <- function(
 #' @param renderer model render object
 #' @param parameters model parameters
 #' @param prob vector of population probabilities of infection
+#' @param relative_rates relative rates of hypnozoite relapse relative to total infection rate
 #' @noRd
 infection_outcome_process <- function(
     timestep,
@@ -152,8 +173,10 @@ infection_outcome_process <- function(
     variables,
     renderer,
     parameters,
-    prob){
+    prob,
+    relative_rates = NULL){
   
+  renderer$render('n_infections', infected_humans$size(), timestep)
   incidence_renderer(
     variables$birth,
     renderer,
@@ -165,6 +188,8 @@ infection_outcome_process <- function(
   )
   
   if (infected_humans$size() > 0) {
+    # p.f SAU infections get boosted (already subset)
+    # p.v SAUdTr infections all get boosted (therefore not subset)
     boost_immunity(
       variables$ica,
       infected_humans,
@@ -217,6 +242,15 @@ infection_outcome_process <- function(
       )
       
     } else if (parameters$parasite == "vivax"){
+      relapse_bite_infection_hazard_resolution(
+        infected_humans,
+        relative_rates,
+        variables,
+        parameters,
+        renderer,
+        timestep
+      )
+      
       boost_immunity(
         variables$iaa,
         infected_humans,
@@ -262,7 +296,86 @@ infection_outcome_process <- function(
         clinical_infections,
         lm_det_infections
       )
+      
+      treated <- calculate_treated(
+        variables,
+        clinical_infections,
+        parameters,
+        timestep,
+        renderer
+      )
+      
+      schedule_infections(
+        parameters,
+        variables,
+        timestep,
+        infected_humans,
+        treated,
+        clinical_infections,
+        lm_det_infections
+      )
+      
     }
+  }
+}
+
+#' @title Relapse/bite infection competing hazard resolution (p.v only)
+#' @description
+#' Resolves competing hazards of bite and hypnozoite relapse infections. 
+#' For bite infections we increase the batch number and factor in drug prophylaxis.
+#' 
+#' @param variables a list of all of the model variables
+#' @param infected_humans bitset of infected humans
+#' @param relative_rates relative rate of relapse infection
+#' @param variables model variables
+#' @param parameters model parameters
+#' @param renderer model renderer
+#' @param timestep current timestep
+#' @noRd
+relapse_bite_infection_hazard_resolution <- function(
+    infected_humans,
+    relative_rates,
+    variables,
+    parameters,
+    renderer,
+    timestep
+){
+  
+  # draw relapses from total infections
+  relapse_infections <- bitset_at(
+    infected_humans,
+    bernoulli_multi_p(relative_rates[infected_humans$to_vector()])
+  )
+  
+  renderer$render('n_relapses', relapse_infections$size(), timestep)
+  # render relapse infections by age
+  incidence_renderer(
+    variables$birth,
+    renderer,
+    relapse_infections,
+    'inc_relapse_',
+    parameters$incidence_relapse_rendering_min_ages,
+    parameters$incidence_relapse_rendering_max_ages,
+    timestep
+  )
+  
+  # get bite infections
+  bite_infections <- infected_humans$copy()$and(relapse_infections$not(inplace = F))
+  
+  ## all bitten humans with an infectious bite (incorporating prophylaxis) get a new batch of hypnozoites
+  if(bite_infections$size()>0){
+    new_hypnozoite_batch_formed <- bite_infections # bitset_at(bite_infections, bernoulli_multi_p(1-ls_prophylaxis))
+    
+    # make sure batches are capped
+    current_batches <- variables$hypnozoites$get_values(new_hypnozoite_batch_formed)
+    new_batch_number <- ifelse(current_batches == parameters$kmax,
+                               current_batches,
+                               current_batches + 1)
+    
+    variables$hypnozoites$queue_update(
+      new_batch_number,
+      new_hypnozoite_batch_formed$and(bite_infections)
+    )
   }
 }
 
