@@ -165,13 +165,13 @@ simulate_bites <- function(
       }
     }
     
-    infectivity <- vnapply(
-      lagged_infectivity,
-      function(l) l$get(timestep - parameters$delay_gam)
-    )
     lagged_infectivity[[mixing_index]]$save(
       sum(human_infectivity * .pi),
       timestep
+    )
+    infectivity <- vnapply(
+      lagged_infectivity,
+      function(l) l$get(timestep - parameters$delay_gam)
     )
     foim <- calculate_foim(a, infectivity, mixing)
     renderer$render(paste0('FOIM_', species_name), foim, timestep)
