@@ -126,7 +126,7 @@ calculate_infections <- function(
     
   } else if (parameters$parasite == "vivax"){
     ## calculated rate of infection for all bitten or with hypnozoites
-    relapse_rates <- variables$hypnozoites$get_values() * parameters$f
+    infection_rates <- relapse_rates <- variables$hypnozoites$get_values() * parameters$f
     infection_rates[bitten_vector] <- infection_rates[bitten_vector] + prob_to_rate(b)
     relative_rates <- relapse_rates/infection_rates
     relative_rates[is.nan(relative_rates)] <- 0
@@ -190,14 +190,16 @@ infection_outcome_process <- function(
   if (infected_humans$size() > 0) {
     # p.f SAU infections get boosted (already subset)
     # p.v SAUdTr infections all get boosted (therefore not subset)
-    boost_immunity(
-      variables$ica,
-      infected_humans,
-      variables$last_boosted_ica,
-      timestep,
-      parameters$uc
-    )
     if(parameters$parasite == "falciparum"){
+      
+      boost_immunity(
+        variables$ica,
+        infected_humans,
+        variables$last_boosted_ica,
+        timestep,
+        parameters$uc
+      )
+      
       boost_immunity(
         variables$id,
         infected_humans,
@@ -235,11 +237,21 @@ infection_outcome_process <- function(
       )
       
       boost_immunity(
+        variables$ica,
+        infected_humans,
+        variables$last_boosted_ica,
+        timestep,
+        parameters$uc,
+        1/parameters$rc
+      )
+      
+      boost_immunity(
         variables$iaa,
         infected_humans,
         variables$last_boosted_iaa,
         timestep,
-        parameters$ua
+        parameters$ua,
+        1/parameters$ra
       )
       
       ## Only S and U infections need to be split using the patent infection function
@@ -696,7 +708,8 @@ boost_immunity <- function(
     exposed_index,
     last_boosted_variable,
     timestep,
-    delay
+    delay,
+    decay_rate = 0
 ) {
   # record who can be boosted
   exposed_index_vector <- exposed_index$to_vector()
@@ -706,7 +719,7 @@ boost_immunity <- function(
   if (sum(to_boost) > 0) {
     # boost the variable
     immunity_variable$queue_update(
-      immunity_variable$get_values(exposed_to_boost) + 1,
+      immunity_variable$get_values(exposed_to_boost) * (1-decay_rate) + 1,
       exposed_to_boost
     )
     # record last boosted
