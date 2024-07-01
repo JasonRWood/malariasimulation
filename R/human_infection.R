@@ -175,7 +175,7 @@ infection_outcome_process <- function(
     parameters,
     prob,
     relative_rates = NULL){
-  
+
   if (infected_humans$size() > 0) {
 
     renderer$render('n_infections', infected_humans$size(), timestep)
