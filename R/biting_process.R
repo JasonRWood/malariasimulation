@@ -78,6 +78,7 @@ simulate_bites <- function(
 ) {
   
   bitten_humans <- individual::Bitset$new(parameters$human_population)
+  n_bites_each <- NULL
   
   human_infectivity <- variables$infectivity$get_values()
   if (parameters$tbv) {
@@ -144,13 +145,23 @@ simulate_bites <- function(
     
     renderer$render(paste0('EIR_', species_name), species_eir, timestep)
     EIR <- EIR + species_eir
-    expected_bites <- species_eir * mean(psi)
+    if(parameters$parasite == "falciparum"){
+      # p.f model factors eir by psi
+      expected_bites <- species_eir * mean(psi)
+    } else if (parameters$parasite == "vivax"){
+      # p.v model standardises biting rate het to eir
+      expected_bites <- species_eir
+    }
+    
     if (expected_bites > 0) {
       n_bites <- rpois(1, expected_bites)
       if (n_bites > 0) {
-        bitten_humans$insert(
-          fast_weighted_sample(n_bites, lambda)
-        )
+        bitten <- fast_weighted_sample(n_bites, lambda)
+        bitten_humans$insert(bitten)
+        if(parameters$parasite == "vivax"){
+          # p.v must pass through the number of bites each individual receives
+          n_bites_each <- table(bitten)
+        }
       }
     }
     
@@ -200,9 +211,14 @@ simulate_bites <- function(
       )
     }
   }
-  
+
   renderer$render('n_bitten', bitten_humans$size(), timestep)
-  bitten_humans
+  
+  if(parameters$parasite == "falciparum"){
+    list(bitten_humans = bitten_humans)
+  } else if (parameters$parasite == "vivax"){
+    list(bitten_humans = bitten_humans, n_bites_each = n_bites_each)
+  }
 }
 
 
