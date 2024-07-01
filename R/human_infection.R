@@ -207,6 +207,15 @@ infection_outcome_process <- function(
     )
     
     if(parameters$parasite == "falciparum"){
+      
+      boost_immunity(
+        variables$ica,
+        infected_humans,
+        variables$last_boosted_ica,
+        timestep,
+        parameters$uc
+      )
+      
       boost_immunity(
         variables$id,
         infected_humans,
@@ -255,11 +264,21 @@ infection_outcome_process <- function(
       )
       
       boost_immunity(
+        variables$ica,
+        infected_humans,
+        variables$last_boosted_ica,
+        timestep,
+        parameters$uc,
+        1/parameters$rc
+      )
+      
+      boost_immunity(
         variables$iaa,
         infected_humans,
         variables$last_boosted_iaa,
         timestep,
-        parameters$ua
+        parameters$ua,
+        1/parameters$ra
       )
       
       ## Only S and U infections are considered in generating lm-det infections
@@ -691,7 +710,8 @@ boost_immunity <- function(
     exposed_index,
     last_boosted_variable,
     timestep,
-    delay
+    delay,
+    decay_rate = 0
 ) {
   # record who can be boosted
   exposed_index_vector <- exposed_index$to_vector()
@@ -701,7 +721,7 @@ boost_immunity <- function(
   if (sum(to_boost) > 0) {
     # boost the variable
     immunity_variable$queue_update(
-      immunity_variable$get_values(exposed_to_boost) + 1,
+      immunity_variable$get_values(exposed_to_boost) * (1-decay_rate) + 1,
       exposed_to_boost
     )
     # record last boosted
