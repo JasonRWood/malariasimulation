@@ -14,15 +14,21 @@ CompetingOutcome <- R6::R6Class(
       }
       private$targeted_process <- targeted_process
       self$rates <- rep(0, size)
+      self$relative_rates <- rep(0, size)
     },
     set_rates = function(rates){
       self$rates <- rates
     },
+    set_relative_rates = function(relative_rates){
+      self$relative_rates <- relative_rates
+    },
     execute = function(t, target){
       private$targeted_process(t, target)
       self$rates <- rep(0, length(self$rates))
+      self$relative_rates <- rep(0, length(self$relative_rates))
     },
-    rates = NULL
+    rates = NULL,
+    relative_rates = NULL
   )
 )
 
