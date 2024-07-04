@@ -58,7 +58,7 @@ test_that('MDA moves the diseased and non-diseased population correctly', {
   timestep <- 50
   renderer <- individual::Render$new(timestep)
   parameters <- get_parameters(list(human_population = 4))
-  parameters <- set_drugs(parameters, list(SP_AQ_params))
+  parameters <- set_drugs(parameters, list(SP_AQ_params_falciparum))
   parameters <- set_mda(
     parameters,
     drug = 1,
@@ -80,6 +80,8 @@ test_that('MDA moves the diseased and non-diseased population correctly', {
     drug_time = mock_double(c(1, 2, 3, 4)),
     drug = mock_double(c(1, 2, 1, 2))
   )
+  
+  events$mda_administer <- mock_event(events$mda_administer)
   
   listener <- create_mda_listeners(
     variables,
@@ -123,7 +125,7 @@ test_that('MDA moves the diseased and non-diseased population correctly', {
   
   expect_bitset_update(
     variables$infectivity$queue_update_mock(),
-    c(.3, .4) * SP_AQ_params[[2]],
+    c(.3, .4) * SP_AQ_params_falciparum[[2]],
     c(3, 4)
   )
   
@@ -144,7 +146,7 @@ test_that('MDA moves the diseased and non-diseased population correctly - second
   timestep <- 150
   renderer <- individual::Render$new(timestep)
   parameters <- get_parameters(list(human_population = 4))
-  parameters <- set_drugs(parameters, list(SP_AQ_params))
+  parameters <- set_drugs(parameters, list(SP_AQ_params_falciparum))
   parameters <- set_mda(
     parameters,
     drug = 1,
@@ -209,7 +211,7 @@ test_that('MDA moves the diseased and non-diseased population correctly - second
   
   expect_bitset_update(
     variables$infectivity$queue_update_mock(),
-    c(.1, .2, .3, .4) * SP_AQ_params[[2]],
+    c(.1, .2, .3, .4) * SP_AQ_params_falciparum[[2]],
     c(1, 2, 3, 4)
   )
   
@@ -230,7 +232,7 @@ test_that('MDA ignores non-detectable asymptomatics', {
   timestep <- 150
   renderer <- individual::Render$new(timestep)
   parameters <- get_parameters(list(human_population = 4))
-  parameters <- set_drugs(parameters, list(SP_AQ_params))
+  parameters <- set_drugs(parameters, list(SP_AQ_params_falciparum))
   parameters <- set_mda(
     parameters,
     drug = 1,
@@ -291,7 +293,7 @@ test_that('MDA ignores non-detectable asymptomatics', {
   
   expect_bitset_update(
     variables$infectivity$queue_update_mock(),
-    c(.1, .2, .3, .4) * SP_AQ_params[[2]],
+    c(.1, .2, .3, .4) * SP_AQ_params_falciparum[[2]],
     c(1, 2, 3, 4)
   )
   
