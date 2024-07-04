@@ -336,9 +336,28 @@ relapse_bite_infection_hazard_resolution <- function(
   # get bite infections
   bite_infections <- infected_humans$copy()$and(relapse_infections$not(inplace = F))
   
+  ## drug prophylaxis may limit formation of new hypnozoite batches
+  ls_prophylaxis <- rep(0, bite_infections$size())
+  if(length(parameters$drug_hypnozoite_efficacy)>0){
+    
+    ls_drug <- variables$ls_drug$get_values(bite_infections)
+    ls_medicated <- (ls_drug > 0)
+    ls_medicated[ls_drug > 0] <- !is.na(parameters$drug_hypnozoite_efficacy[ls_drug])
+    
+    if (any(ls_medicated)) {
+      ls_drug <- ls_drug[ls_medicated]
+      ls_drug_time <- variables$ls_drug_time$get_values(bite_infections)[ls_medicated]
+      ls_prophylaxis[ls_medicated] <- weibull_survival(
+        timestep - ls_drug_time,
+        parameters$drug_hypnozoite_prophylaxis_shape[ls_drug],
+        parameters$drug_hypnozoite_prophylaxis_scale[ls_drug]
+      )
+    }
+  }
+  
   ## all bitten humans with an infectious bite (incorporating prophylaxis) get a new batch of hypnozoites
   if(bite_infections$size()>0){
-    new_hypnozoite_batch_formed <- bite_infections # bitset_at(bite_infections, bernoulli_multi_p(1-ls_prophylaxis))
+    new_hypnozoite_batch_formed <- bitset_at(bite_infections, bernoulli_multi_p(1-ls_prophylaxis))
     
     # make sure batches are capped
     current_batches <- variables$hypnozoites$get_values(new_hypnozoite_batch_formed)
