@@ -481,7 +481,7 @@ schedule_infections <- function(
         parameters$ca,
         variables$recovery_rates,
         1/parameters$da,
-        to_infect
+        to_infect_asym
       )
     }
   }
