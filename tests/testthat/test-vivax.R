@@ -28,8 +28,8 @@ test_that('Test difference between falciparum and vivax parameter lists', {
   )
   
   expect_identical(
-    sort(in_vivax_not_falciparum),
-    c("dpcr_max", "dpcr_min", "k_pcr", "apcr50", # human sub-patent state delay
+    in_vivax_not_falciparum,
+    c("dpcr_max", "dpcr_min", "kpcr", "apcr50", # human sub-patent state delay
       "init_iaa", "init_iam", "ra", "ua", # antiparasite immunity parameters)
       "b", # probability of infection given an infectious bite
       "philm_min", "philm_max", "klm", "alm50", # probability of light-microscopy detectable infection parameters
