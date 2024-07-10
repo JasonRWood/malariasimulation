@@ -176,9 +176,9 @@ create_processes <- function(
   # Rendering
   # =========
   
-  imm_var_names <- c('ica','icm','id','iva','ivm')
+  imm_var_names <- c('ica', 'icm', 'id', 'iva', 'ivm')
   if(parameters$parasite == "falciparum"){
-    imm_var_names <- c(imm_var_names,'ib')
+    imm_var_names <- c(imm_var_names, 'ib')
   }
 
   processes <- c(
