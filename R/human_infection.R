@@ -316,6 +316,84 @@ infection_outcome_process <- function(
       )
       
     }
+    
+    treated <- calculate_treated(
+      variables,
+      clinical_infections,
+      parameters,
+      timestep,
+      renderer
+    )
+    
+    schedule_infections(
+      variables,
+      patent_infections,
+      clinical_infections,
+      treated,
+      infected_humans,
+      parameters,
+      timestep
+    )
+  }
+}
+
+#' @title Relapse/bite infection competing hazard resolution (p.v only)
+#' @description
+#' Resolves competing hazards of bite and hypnozoite relapse infections. 
+#' For bite infections we increase the batch number and factor in drug prophylaxis.
+#' 
+#' @param variables a list of all of the model variables
+#' @param infected_humans bitset of infected humans
+#' @param relative_rates relative rate of relapse infection
+#' @param variables model variables
+#' @param parameters model parameters
+#' @param renderer model renderer
+#' @param timestep current timestep
+#' @noRd
+relapse_bite_infection_hazard_resolution <- function(
+    infected_humans,
+    relative_rates,
+    variables,
+    parameters,
+    renderer,
+    timestep
+){
+  
+  # draw relapses from total infections
+  relapse_infections <- bitset_at(
+    infected_humans,
+    bernoulli_multi_p(relative_rates[infected_humans$to_vector()])
+  )
+  
+  renderer$render('n_relapses', relapse_infections$size(), timestep)
+  # render relapse infections by age
+  incidence_renderer(
+    variables$birth,
+    renderer,
+    relapse_infections,
+    'inc_relapse_',
+    parameters$incidence_relapse_rendering_min_ages,
+    parameters$incidence_relapse_rendering_max_ages,
+    timestep
+  )
+  
+  # get bite infections
+  bite_infections <- infected_humans$copy()$and(relapse_infections$not(inplace = F))
+  
+  ## all bitten humans with an infectious bite (incorporating prophylaxis) get a new batch of hypnozoites
+  if(bite_infections$size()>0){
+    new_hypnozoite_batch_formed <- bite_infections # bitset_at(bite_infections, bernoulli_multi_p(1-ls_prophylaxis))
+    
+    # make sure batches are capped
+    current_batches <- variables$hypnozoites$get_values(new_hypnozoite_batch_formed)
+    new_batch_number <- ifelse(current_batches == parameters$kmax,
+                               current_batches,
+                               current_batches + 1)
+    
+    variables$hypnozoites$queue_update(
+      new_batch_number,
+      new_hypnozoite_batch_formed$and(bite_infections)
+    )
   }
 }
 
