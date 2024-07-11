@@ -156,13 +156,12 @@ test_that('simulate_infection integrates different types of infection and schedu
   mockery::expect_args(
     schedule_mock,
     1,
-    variables,
-    NULL,
-    clinical,
-    treated,
-    infected,
     parameters,
-    timestep
+    variables,
+    timestep,
+    infected,
+    treated,
+    clinical
   )
 })
 
@@ -659,13 +658,12 @@ test_that('schedule_infections correctly schedules new infections', {
   mockery::stub(schedule_infections, 'update_to_asymptomatic_infection', asymp_mock)
   
   schedule_infections(
-    variables,
-    NULL,
-    clinical_infections,
-    treated,
-    infections,
     parameters,
-    42 
+    variables,
+    42,
+    infections,
+    treated,
+    clinical_infections
   )
 
   actual_infected <- mockery::mock_args(infection_mock)[[1]][[7]]$to_vector()

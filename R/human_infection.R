@@ -197,7 +197,24 @@ infection_outcome_process <- function(
         renderer
       )
       
-      patent_infections <- NULL
+      treated <- calculate_treated(
+        variables,
+        clinical_infections,
+        parameters,
+        timestep,
+        renderer
+      )
+      
+      renderer$render('n_infections', infected_humans$size(), timestep)
+      
+      schedule_infections(
+        parameters,
+        variables,
+        timestep,
+        infected_humans,
+        treated,
+        clinical_infections
+      )
       
     } else if (parameters$parasite == "vivax"){
       boost_immunity(
@@ -208,8 +225,8 @@ infection_outcome_process <- function(
         parameters$ua
       )
       
-      ## Only S and U infections need to be split using the patent infection function
-      patent_infections <- calculate_patent_infections(
+      ## Only S and U infections need to be split using the lm-detectable infection function
+      lm_det_infections <- calculate_lm_det_infections(
         variables,
         variables$state$get_index_of(c("S","U"))$and(infected_humans),
         parameters,
@@ -217,48 +234,48 @@ infection_outcome_process <- function(
         timestep
       )
       
-      # Patent level infected S and U, and all A infections to get clinical infections
+      # Lm-detectable level infected S and U, and all A infections may receive clinical infections
       clinical_infections <- calculate_clinical_infections(
         variables,
-        variables$state$get_index_of("A")$and(infected_humans)$or(patent_infections),
+        variables$state$get_index_of("A")$and(infected_humans)$or(lm_det_infections),
         parameters,
         renderer,
         timestep
       )
+      
+      treated <- calculate_treated(
+        variables,
+        clinical_infections,
+        parameters,
+        timestep,
+        renderer
+      )
+      
+      renderer$render('n_infections', infected_humans$size(), timestep)
+      
+      schedule_infections(
+        parameters,
+        variables,
+        timestep,
+        infected_humans,
+        treated,
+        clinical_infections,
+        lm_det_infections
+      )
     }
   }
-  
-  treated <- calculate_treated(
-    variables,
-    clinical_infections,
-    parameters,
-    timestep,
-    renderer
-  )
-  
-  renderer$render('n_infections', infected_humans$size(), timestep)
-  
-  schedule_infections(
-    variables,
-    patent_infections,
-    clinical_infections,
-    treated,
-    infected_humans,
-    parameters,
-    timestep
-  )
 }
 
-#' @title Calculate patent infections (p.v only)
+#' @title Calculate light microscopy detectable infections (p.v only)
 #' @description
-#' Sample patent infections from all infections
+#' Sample light microscopy detectable infections from all infections
 #' @param variables a list of all of the model variables
 #' @param infections bitset of infected humans
 #' @param parameters model parameters
 #' @param renderer model render
 #' @param timestep current timestep
 #' @noRd
-calculate_patent_infections <- function(
+calculate_lm_det_infections <- function(
     variables,
     infections,
     parameters,
@@ -272,15 +289,15 @@ calculate_patent_infections <- function(
   philm <- anti_parasite_immunity(
     min = parameters$philm_min, max = parameters$philm_max, a50 = parameters$alm50,
     k = parameters$klm, iaa = iaa, iam = iam)
-  patent_infections <- bitset_at(infections, bernoulli_multi_p(philm))
+  lm_det_infections <- bitset_at(infections, bernoulli_multi_p(philm))
   
   incidence_renderer(
     variables$birth,
     renderer,
-    patent_infections,
-    'inc_patent_',
-    parameters$patent_incidence_rendering_min_ages,
-    parameters$patent_incidence_rendering_max_ages,
+    lm_det_infections,
+    'inc_lm_det_',
+    parameters$lm_det_incidence_rendering_min_ages,
+    parameters$lm_det_incidence_rendering_max_ages,
     timestep
   )
   incidence_probability_renderer(
@@ -288,12 +305,12 @@ calculate_patent_infections <- function(
     renderer,
     infections,
     philm,
-    'inc_patent_',
-    parameters$patent_incidence_rendering_min_ages,
-    parameters$patent_incidence_rendering_max_ages,
+    'inc_lm_det_',
+    parameters$lm_det_incidence_rendering_min_ages,
+    parameters$lm_det_incidence_rendering_max_ages,
     timestep
   )
-  patent_infections
+  lm_det_infections
 }
 
 #' @title Calculate clinical infections
@@ -518,20 +535,24 @@ calculate_treated <- function(
 #' @title Schedule infections
 #' @description
 #' Schedule infections in humans after the incubation period
-#' @param events a list of all of the model events
-#' @param clinical_infections bitset of clinically infected humans
-#' @param treated bitset of treated humans
-#' @param infections bitset of infected humans
 #' @param parameters model parameters
+#' @param variables a list of all of the model variables
+#' @param timestep current timestep
+#' @param infections bitset of infected humans
+#' @param treated bitset of treated humans
+#' @param clinical_infections bitset of clinically infected humans
+#' @param lm_det_infections bitset of lm-detectable infected humans (p.v only:
+#'  lm_det infections are modelled as a human state, rather than a subset of  
+#'  asymptomatic infections as in the p.f model)
 #' @noRd
 schedule_infections <- function(
-    variables,
-    patent_infections,
-    clinical_infections,
-    treated,
-    infections,
     parameters,
-    timestep
+    variables,
+    timestep,
+    infections,
+    treated,
+    clinical_infections,
+    lm_det_infections = NULL
 ) {
   
   included <- treated$not(TRUE)
@@ -562,8 +583,8 @@ schedule_infections <- function(
       )
     }
   } else if (parameters$parasite == "vivax"){
-    to_infect_subpatent <- variables$state$get_index_of(c('S'))$and(included)$and(infections)$and(patent_infections$not(FALSE))
-    to_infect_asym <- variables$state$get_index_of(c('S',"U"))$and(included)$and(patent_infections)$and(clinical_infections$not(FALSE))
+    to_infect_subpatent <- variables$state$get_index_of(c('S'))$and(included)$and(infections)$and(lm_det_infections$not(FALSE))
+    to_infect_asym <- variables$state$get_index_of(c('S',"U"))$and(included)$and(lm_det_infections)$and(clinical_infections$not(FALSE))
     
     if(to_infect_asym$size() > 0){
       # p.v has constant asymptomatic infectivity
