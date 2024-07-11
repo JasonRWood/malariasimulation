@@ -360,16 +360,16 @@ calculate_patent_infections <- function(
   patent_infections
 }
 
-#' @title Calculate patent infections (p.v only)
+#' @title Calculate light microscopy detectable infections (p.v only)
 #' @description
-#' Sample patent infections from all infections
+#' Sample light microscopy detectable infections from all infections
 #' @param variables a list of all of the model variables
 #' @param infections bitset of infected humans
 #' @param parameters model parameters
 #' @param renderer model render
 #' @param timestep current timestep
 #' @noRd
-calculate_patent_infections <- function(
+calculate_lm_det_infections <- function(
     variables,
     infections,
     parameters,
@@ -383,15 +383,15 @@ calculate_patent_infections <- function(
   philm <- anti_parasite_immunity(
     min = parameters$philm_min, max = parameters$philm_max, a50 = parameters$alm50,
     k = parameters$klm, iaa = iaa, iam = iam)
-  patent_infections <- bitset_at(infections, bernoulli_multi_p(philm))
+  lm_det_infections <- bitset_at(infections, bernoulli_multi_p(philm))
   
   incidence_renderer(
     variables$birth,
     renderer,
-    patent_infections,
-    'inc_patent_',
-    parameters$patent_incidence_rendering_min_ages,
-    parameters$patent_incidence_rendering_max_ages,
+    lm_det_infections,
+    'inc_lm_det_',
+    parameters$lm_det_incidence_rendering_min_ages,
+    parameters$lm_det_incidence_rendering_max_ages,
     timestep
   )
   incidence_probability_renderer(
@@ -399,12 +399,12 @@ calculate_patent_infections <- function(
     renderer,
     infections,
     philm,
-    'inc_patent_',
-    parameters$patent_incidence_rendering_min_ages,
-    parameters$patent_incidence_rendering_max_ages,
+    'inc_lm_det_',
+    parameters$lm_det_incidence_rendering_min_ages,
+    parameters$lm_det_incidence_rendering_max_ages,
     timestep
   )
-  patent_infections
+  lm_det_infections
 }
 
 #' @title Calculate clinical infections
