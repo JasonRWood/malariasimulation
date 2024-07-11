@@ -296,44 +296,7 @@ infection_outcome_process <- function(
         clinical_infections,
         lm_det_infections
       )
-      
-      treated <- calculate_treated(
-        variables,
-        clinical_infections,
-        parameters,
-        timestep,
-        renderer
-      )
-      
-      schedule_infections(
-        parameters,
-        variables,
-        timestep,
-        infected_humans,
-        treated,
-        clinical_infections,
-        lm_det_infections
-      )
-      
     }
-    
-    treated <- calculate_treated(
-      variables,
-      clinical_infections,
-      parameters,
-      timestep,
-      renderer
-    )
-    
-    schedule_infections(
-      variables,
-      patent_infections,
-      clinical_infections,
-      treated,
-      infected_humans,
-      parameters,
-      timestep
-    )
   }
 }
 
