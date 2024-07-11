@@ -526,7 +526,6 @@ calculate_treated <- function(
 #' @param to_D bitset of humans to move to state D
 #' @param to_A bitset of humans to move to state A
 #' @param to_U bitset of humans to move to state U
-#' @param to_T bitset of humans to move to state T
 #' @noRd
 schedule_infections <- function(
     parameters,
