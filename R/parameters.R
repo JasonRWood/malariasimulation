@@ -114,7 +114,7 @@
 #' * id0 - scale parameter; default = 1.577533
 #' * kd - shape parameter; default = 0.476614
 #'
-#' probability of patent infection due to anti-parasite immunity (p.v only):
+#' probability of light miscroscopy detectable infection due to anti-parasite immunity (p.v only):
 #'
 #' * phi0lm - maximum probability due to no immunity; default = 0.8918
 #' * phi1lm - maximum reduction due to immunity; default = 0.00482170890334156
@@ -143,7 +143,7 @@
 #' * cd - infectivity of clinically diseased humans towards mosquitoes; default = 0.068
 #' * ca - infectivity of asymptomatic humans towards mosquitoes (p.v only); default = 0.1
 #' * gamma1 - parameter for infectivity of asymptomatic humans; default = 1.82425
-#' * cu - infectivity of sub-patent infection; default = 0.0062
+#' * cu - infectivity of subpatent infection; default = 0.0062
 #' * ct - infectivity of treated infection; default = 0.021896
 #'
 #' mosquito fixed state transitions (including mortality):
@@ -280,8 +280,8 @@
 #' * incidence_rendering_min_ages - the minimum ages for incidence
 #' outputs (includes asymptomatic microscopy +); default = turned off
 #' * incidence_rendering_max_ages - the corresponding max ages; default = turned off
-#' * patent_incidence_rendering_min_ages - the minimum ages for patent incidence outputs (LM detectable), (p.v only); default = turned off
-#' * patent_incidence_rendering_max_ages - the corresponding max ages (p.v only); default = turned off
+#' * lm_det_incidence_rendering_min_ages - the minimum ages for light miscroscopy detectable incidence outputs, (p.v only); default = turned off
+#' * lm_det_incidence_rendering_max_ages - the corresponding max ages (p.v only); default = turned off
 #' * clinical_incidence_rendering_min_ages - the minimum ages for clinical incidence outputs (symptomatic); default = 0
 #' * clinical_incidence_rendering_max_ages - the corresponding max ages; default = 1825
 #' * severe_incidence_rendering_min_ages - the minimum ages for severe incidence
@@ -341,7 +341,7 @@ get_parameters <- function(overrides = list(), parasite = "falciparum") {
     # maternal immunity parameters
     # probability of pre-erythrocytic infection/blood immunity
     # probability of asymptomatic detection (p.f only)
-    # probability of patent infection (due to anti-parasite immunity, p.v only)
+    # probability of l infection (due to anti-parasite immunity, p.v only)
     # probability of clinical infection
     # probability of severe infection (p.f only)
     # infectivity towards mosquitos
@@ -467,8 +467,8 @@ get_parameters <- function(overrides = list(), parasite = "falciparum") {
       age_group_rendering_max_ages = numeric(0),
       incidence_rendering_min_ages = numeric(0),
       incidence_rendering_max_ages = numeric(0),
-      patent_incidence_rendering_min_ages = numeric(0),
-      patent_incidence_rendering_max_ages = numeric(0),
+      lm_det_incidence_rendering_min_ages = numeric(0),
+      lm_det_incidence_rendering_max_ages = numeric(0),
       clinical_incidence_rendering_min_ages = numeric(0),
       clinical_incidence_rendering_max_ages = numeric(0),
       severe_incidence_rendering_min_ages = numeric(0),
