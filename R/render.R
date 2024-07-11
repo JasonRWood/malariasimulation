@@ -35,7 +35,7 @@ create_prevelance_renderer <- function(
         parameters
       )
       asymptomatic_detected <- bitset_at(asymptomatic, bernoulli_multi_p(prob))
-    } else {
+    } else if (parameters$parasite == "vivax") {
       asymptomatic_detected <- asymptomatic
     }
 
