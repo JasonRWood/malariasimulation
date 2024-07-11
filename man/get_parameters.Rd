@@ -124,7 +124,7 @@ probability of detection by light-microscopy when asymptomatic (p.f only):
 \item kd - shape parameter; default = 0.476614
 }
 
-probability of patent infection due to anti-parasite immunity (p.v only):
+probability of light miscroscopy detectable infection due to anti-parasite immunity (p.v only):
 \itemize{
 \item phi0lm - maximum probability due to no immunity; default = 0.8918
 \item phi1lm - maximum reduction due to immunity; default = 0.00482170890334156
@@ -156,7 +156,7 @@ infectivity towards mosquitoes:
 \item cd - infectivity of clinically diseased humans towards mosquitoes; default = 0.068
 \item ca - infectivity of asymptomatic humans towards mosquitoes (p.v only); default = 0.1
 \item gamma1 - parameter for infectivity of asymptomatic humans; default = 1.82425
-\item cu - infectivity of sub-patent infection; default = 0.0062
+\item cu - infectivity of subpatent infection; default = 0.0062
 \item ct - infectivity of treated infection; default = 0.021896
 }
 
