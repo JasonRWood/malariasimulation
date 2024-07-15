@@ -165,6 +165,9 @@ infection_outcome_process <- function(
   )
   
   if (infected_humans$size() > 0) {
+    
+    renderer$render('n_infections', infected_humans$size(), timestep)
+    
     boost_immunity(
       variables$ica,
       infected_humans,
@@ -172,6 +175,7 @@ infection_outcome_process <- function(
       timestep,
       parameters$uc
     )
+    
     if(parameters$parasite == "falciparum"){
       boost_immunity(
         variables$id,
@@ -181,12 +185,20 @@ infection_outcome_process <- function(
         parameters$ud
       )
       
-      clinical_infections <- calculate_clinical_infections(
+      clinical <- calculate_clinical_infections(
         variables,
         infected_humans,
         parameters,
         renderer,
         timestep
+      )
+      
+      treated <- calculate_treated(
+        variables,
+        clinical,
+        parameters,
+        timestep,
+        renderer
       )
       
       update_severe_disease(
@@ -197,26 +209,12 @@ infection_outcome_process <- function(
         renderer
       )
       
-      treated <- calculate_treated(
-        variables,
-        clinical_infections,
-        parameters,
-        timestep,
-        renderer
-      )
-      
-      renderer$render('n_infections', infected_humans$size(), timestep)
-      
-      schedule_infections(
-        parameters,
-        variables,
-        timestep,
-        infected_humans,
-        treated,
-        clinical_infections
-      )
+      to_D <- treated$not(FALSE)$and(clinical)
+      to_A <- infected_humans$and(clinical$not(FALSE))
+      to_U <- NULL
       
     } else if (parameters$parasite == "vivax"){
+      
       boost_immunity(
         variables$iaa,
         infected_humans,
@@ -225,8 +223,8 @@ infection_outcome_process <- function(
         parameters$ua
       )
       
-      ## Only S and U infections need to be split using the lm-detectable infection function
-      lm_det_infections <- calculate_lm_det_infections(
+      ## Only S and U infections are considered in generating lm-det infections
+      lm_detectable <- calculate_lm_det_infections(
         variables,
         variables$state$get_index_of(c("S","U"))$and(infected_humans),
         parameters,
@@ -235,9 +233,13 @@ infection_outcome_process <- function(
       )
       
       # Lm-detectable level infected S and U, and all A infections may receive clinical infections
-      clinical_infections <- calculate_clinical_infections(
+      # There is a different calculation to generate clinical infections, based on current infection level
+      # LM infections must only pass through the clinical calculation, therefore all "A" infections are included
+      # "S" and "U" infections must pass through the lm-detectable calculation prior to and in addition to the clinical
+      # calculation. We therefore consider all "A" infections and only the "S" and "U" infections that are now lm-detectable.
+      clinical <- calculate_clinical_infections(
         variables,
-        variables$state$get_index_of("A")$and(infected_humans)$or(lm_det_infections),
+        variables$state$get_index_of("A")$and(infected_humans)$or(lm_detectable),
         parameters,
         renderer,
         timestep
@@ -245,24 +247,25 @@ infection_outcome_process <- function(
       
       treated <- calculate_treated(
         variables,
-        clinical_infections,
+        clinical,
         parameters,
         timestep,
         renderer
       )
       
-      renderer$render('n_infections', infected_humans$size(), timestep)
-      
-      schedule_infections(
-        parameters,
-        variables,
-        timestep,
-        infected_humans,
-        treated,
-        clinical_infections,
-        lm_det_infections
-      )
+      to_U <- infected_humans$and(lm_detectable$not(F))$and(variables$state$get_index_of(c("S")))
+      to_A <- lm_detectable$and(clinical$not(F))
+      to_D <- clinical$and(treated$not(F))
     }
+    
+    schedule_infections(
+      parameters,
+      variables,
+      timestep,
+      to_D,
+      to_A,
+      to_U
+    )
   }
 }
 
@@ -532,33 +535,28 @@ calculate_treated <- function(
   
 }
 
+
 #' @title Schedule infections
 #' @description
 #' Schedule infections in humans after the incubation period
 #' @param parameters model parameters
 #' @param variables a list of all of the model variables
 #' @param timestep current timestep
-#' @param infections bitset of infected humans
-#' @param treated bitset of treated humans
-#' @param clinical_infections bitset of clinically infected humans
-#' @param lm_det_infections bitset of lm-detectable infected humans (p.v only:
-#'  lm_det infections are modelled as a human state, rather than a subset of  
-#'  asymptomatic infections as in the p.f model)
+#' @param to_D bitset of humans to move to state D
+#' @param to_A bitset of humans to move to state A
+#' @param to_U bitset of humans to move to state U
+#' @param to_T bitset of humans to move to state T
 #' @noRd
 schedule_infections <- function(
     parameters,
     variables,
     timestep,
-    infections,
-    treated,
-    clinical_infections,
-    lm_det_infections = NULL
+    to_D,
+    to_A,
+    to_U
 ) {
   
-  included <- treated$not(TRUE)
-  to_infect_clinical <- clinical_infections$and(included)
-
-  if(to_infect_clinical$size() > 0) {
+  if(to_D$size() > 0) {
     update_infection(
       variables$state,
       'D',
@@ -566,27 +564,20 @@ schedule_infections <- function(
       parameters$cd,
       variables$recovery_rates,
       1/parameters$dd,
-      to_infect_clinical
+      to_D
     )
   }
 
-  if(parameters$parasite == "falciparum"){
-    to_infect_asym <- clinical_infections$copy()$not(TRUE)$and(infections)$and(included)
-    
-    if(to_infect_asym$size() > 0){
+  if(to_A$size() > 0) {
+    if(parameters$parasite == "falciparum"){
       # p.f has immunity-determined asymptomatic infectivity
       update_to_asymptomatic_infection(
         variables,
         parameters,
         timestep,
-        to_infect_asym
+        to_A
       )
-    }
-  } else if (parameters$parasite == "vivax"){
-    to_infect_subpatent <- variables$state$get_index_of(c('S'))$and(included)$and(infections)$and(lm_det_infections$not(FALSE))
-    to_infect_asym <- variables$state$get_index_of(c('S',"U"))$and(included)$and(lm_det_infections)$and(clinical_infections$not(FALSE))
-    
-    if(to_infect_asym$size() > 0){
+    } else if (parameters$parasite == "vivax"){
       # p.v has constant asymptomatic infectivity
       update_infection(
         variables$state,
@@ -595,10 +586,14 @@ schedule_infections <- function(
         parameters$ca,
         variables$recovery_rates,
         1/parameters$da,
-        to_infect_asym
+        to_A
       )
     }
-    if(to_infect_subpatent$size() > 0){
+  }
+  
+  if(parameters$parasite == "vivax"){
+    # new p.v infections may be subpatent
+    if(to_U$size() > 0){
       # p.v subpatent recovery rate is immunity dependent
       update_infection(
         variables$state,
@@ -608,10 +603,10 @@ schedule_infections <- function(
         variables$recovery_rates,
         1/anti_parasite_immunity(
           parameters$dpcr_min, parameters$dpcr_max, parameters$apcr50, parameters$kpcr,
-          variables$iaa$get_values(to_infect_subpatent),
-          variables$iam$get_values(to_infect_subpatent)
+          variables$iaa$get_values(to_U),
+          variables$iam$get_values(to_U)
         ),
-        to_infect_subpatent
+        to_U
       )
     }
   }
