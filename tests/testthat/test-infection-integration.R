@@ -95,8 +95,11 @@ test_that('simulate_infection integrates different types of infection and schedu
   treated <- individual::Bitset$new(population)$insert(3)
   treated_mock <- mockery::mock(treated)
   schedule_mock <- mockery::mock()
-  
-  
+
+  to_D <- treated$not(FALSE)$and(clinical)
+  to_A <- infected$and(clinical$not(FALSE))
+  to_U <- NULL
+
   mockery::stub(infection_outcome_process, 'incidence_renderer', mockery::mock())
   mockery::stub(infection_outcome_process, 'boost_immunity', boost_immunity_mock)
   mockery::stub(infection_outcome_process, 'calculate_clinical_infections', clinical_infection_mock)
@@ -111,8 +114,7 @@ test_that('simulate_infection integrates different types of infection and schedu
     renderer,
     parameters,
     prob)
-  
-  
+
   mockery::expect_args(
     boost_immunity_mock,
     1,
@@ -143,6 +145,7 @@ test_that('simulate_infection integrates different types of infection and schedu
     renderer
   )
   
+  mockery::mock_args(treated_mock)[[1]][[2]]$to_vector()
   mockery::expect_args(
     treated_mock,
     1,
@@ -159,9 +162,9 @@ test_that('simulate_infection integrates different types of infection and schedu
     parameters,
     variables,
     timestep,
-    infected,
-    treated,
-    clinical
+    to_D,
+    to_A,
+    to_U
   )
 })
 
@@ -654,6 +657,10 @@ test_that('schedule_infections correctly schedules new infections', {
   infection_mock <- mockery::mock()
   asymp_mock <- mockery::mock()
   
+  to_D <- treated$not(FALSE)$and(clinical_infections)
+  to_A <- clinical_infections$not(FALSE)$and(infections)
+  to_U <- NULL
+  
   mockery::stub(schedule_infections, 'update_infection', infection_mock)
   mockery::stub(schedule_infections, 'update_to_asymptomatic_infection', asymp_mock)
   
@@ -661,9 +668,9 @@ test_that('schedule_infections correctly schedules new infections', {
     parameters,
     variables,
     42,
-    infections,
-    treated,
-    clinical_infections
+    to_D,
+    to_A,
+    to_U
   )
 
   actual_infected <- mockery::mock_args(infection_mock)[[1]][[7]]$to_vector()
