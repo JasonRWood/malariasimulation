@@ -209,6 +209,7 @@ infection_outcome_process <- function(
         renderer
       )
       
+      ## The treated and infected_humans bitsets are re-written so be cautious!
       to_D <- treated$not(FALSE)$and(clinical)
       to_A <- infected_humans$and(clinical$not(FALSE))
       to_U <- NULL
@@ -253,6 +254,7 @@ infection_outcome_process <- function(
         renderer
       )
       
+      ## The infected_humans,lm_detectable and clinical bitsets are re-written so be cautious!
       to_U <- infected_humans$and(lm_detectable$not(F))$and(variables$state$get_index_of(c("S")))
       to_A <- lm_detectable$and(clinical$not(F))
       to_D <- clinical$and(treated$not(F))
