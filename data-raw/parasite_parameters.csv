@@ -27,7 +27,7 @@ falciparum,ib0,43.9,
 falciparum,kb,2.16,
 falciparum,fd0,0.007055,
 falciparum,ad,7993.5,
-falciparum,gammad,4.9183,
+falciparum,gammad,4.8183,
 falciparum,d1,0.160527,
 falciparum,id0,1.577533,
 falciparum,kd,0.476614,
@@ -113,7 +113,7 @@ vivax,gammav,2.91282,to_be_removed
 vivax,gamma1,1.82425,to_be_removed
 vivax,fd0,0.007055,to_be_removed
 vivax,ad,7993.5,to_be_removed
-vivax,gammad,4.9183,to_be_removed
+vivax,gammad,4.8183,to_be_removed
 vivax,d1,0.160527,to_be_removed
 vivax,id0,1.577533,to_be_removed
 vivax,kd,0.476614,to_be_removed
