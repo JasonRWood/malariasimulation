@@ -127,7 +127,7 @@ test_that('simulate_bites integrates eir calculation and mosquito side effects',
     lagged_eir
   )
 
-  expect_equal(bitten$bitten_humans$to_vector(), c(2, 3))
+  expect_equal(bitten$to_vector(), c(2, 3))
 
   f <- parameters$blood_meal_rates[[1]]
 
