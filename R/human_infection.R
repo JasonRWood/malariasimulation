@@ -21,11 +21,11 @@ simulate_infection <- function(
     renderer,
     infection_outcome
 ) {
-  if (bitten_humans$bitten_humans$size() > 0) {
-    if(parameters$parasite == "falciparum"){
+  if(parameters$parasite == "falciparum"){
+    if (bitten_humans$size() > 0) {
       boost_immunity(
         variables$ib,
-        bitten_humans$bitten_humans,
+        bitten_humans,
         variables$last_boosted_ib,
         timestep,
         parameters$ub
@@ -61,20 +61,25 @@ calculate_infections <- function(
     infection_outcome
 ) {
   
-  if(bitten_humans$bitten_humans$size() == 0){return(bitten_humans$bitten_humans)}
-  
   if(parameters$parasite == "falciparum"){
-    source_humans <- variables$state$get_index_of(c('S','A','U'))$and(bitten_humans$bitten_humans)
+    
+    if(bitten_humans$size() == 0){return(bitten_humans)}
+    
+    source_humans <- variables$state$get_index_of(c('S','A','U'))$and(bitten_humans)
     
     ## p.f models blood immunity
     b <- blood_immunity(variables$ib$get_values(source_humans), parameters)
     
   } else if (parameters$parasite == "vivax"){
     ## source_humans must include individuals with hypnozoites which may be impacted by prophylaxis/vaccination
-    source_humans <- bitten_humans$bitten_humans$copy()$or(variables$hypnozoites$get_index_of(0)$not(TRUE))
-    bitten_vector <- bitten_humans$bitten_humans$to_vector()
+    bitten_humans_index <- bitten_humans$get_index_of(!0)
+    source_humans <- variables$hypnozoites$get_index_of(0)$not(T)$or(bitten_humans_index)
+
+    if(source_humans$size() == 0){return(source_humans)}
+    
+    # bitten_vector <- bitten_humans$to_vector()
     ## p.v does not model blood immunity but must take into account multiple bites per person
-    b <- 1-(1-parameters$b)^bitten_humans$n_bites_each
+    b <- 1 - (1 - parameters$b)^bitten_humans$get_values(bitten_humans_index)
   }
   source_vector <- source_humans$to_vector()
 
@@ -126,8 +131,9 @@ calculate_infections <- function(
     
   } else if (parameters$parasite == "vivax"){
     ## calculated rate of infection for all bitten or with hypnozoites
+    infection_rates[bitten_humans_index$to_vector()] <- prob_to_rate(b)
     relapse_rates <- variables$hypnozoites$get_values() * parameters$f
-    infection_rates[bitten_vector] <- infection_rates[bitten_vector] + prob_to_rate(b)
+    infection_rates <- infection_rates + relapse_rates
     relative_rates <- relapse_rates/infection_rates
     relative_rates[is.nan(relative_rates)] <- 0
     
@@ -263,9 +269,7 @@ infection_outcome_process <- function(
       lm_det_infections <- calculate_lm_det_infections(
         variables,
         variables$state$get_index_of(c("S","U"))$and(infected_humans),
-        parameters,
-        renderer,
-        timestep
+        parameters
       )
       
       # Lm-detectable level infected S and U, and all A infections may receive clinical infections
@@ -349,69 +353,7 @@ relapse_bite_infection_hazard_resolution <- function(
     
     # make sure batches are capped
     current_batches <- variables$hypnozoites$get_values(new_hypnozoite_batch_formed)
-    new_batch_number <- ifelse(current_batches == parameters$kmax,
-                               current_batches,
-                               current_batches + 1)
-    
-    variables$hypnozoites$queue_update(
-      new_batch_number,
-      new_hypnozoite_batch_formed$and(bite_infections)
-    )
-  }
-}
-
-#' @title Relapse/bite infection competing hazard resolution (p.v only)
-#' @description
-#' Resolves competing hazards of bite and hypnozoite relapse infections. 
-#' For bite infections we increase the batch number and factor in drug prophylaxis.
-#' 
-#' @param variables a list of all of the model variables
-#' @param infected_humans bitset of infected humans
-#' @param relative_rates relative rate of relapse infection
-#' @param variables model variables
-#' @param parameters model parameters
-#' @param renderer model renderer
-#' @param timestep current timestep
-#' @noRd
-relapse_bite_infection_hazard_resolution <- function(
-    infected_humans,
-    relative_rates,
-    variables,
-    parameters,
-    renderer,
-    timestep
-){
-  
-  # draw relapses from total infections
-  relapse_infections <- bitset_at(
-    infected_humans,
-    bernoulli_multi_p(relative_rates[infected_humans$to_vector()])
-  )
-  
-  renderer$render('n_relapses', relapse_infections$size(), timestep)
-  # render relapse infections by age
-  incidence_renderer(
-    variables$birth,
-    renderer,
-    relapse_infections,
-    'inc_relapse_',
-    parameters$incidence_relapse_rendering_min_ages,
-    parameters$incidence_relapse_rendering_max_ages,
-    timestep
-  )
-  
-  # get bite infections
-  bite_infections <- infected_humans$copy()$and(relapse_infections$not(inplace = F))
-  
-  ## all bitten humans with an infectious bite (incorporating prophylaxis) get a new batch of hypnozoites
-  if(bite_infections$size()>0){
-    new_hypnozoite_batch_formed <- bite_infections # bitset_at(bite_infections, bernoulli_multi_p(1-ls_prophylaxis))
-    
-    # make sure batches are capped
-    current_batches <- variables$hypnozoites$get_values(new_hypnozoite_batch_formed)
-    new_batch_number <- ifelse(current_batches == parameters$kmax,
-                               current_batches,
-                               current_batches + 1)
+    new_batch_number <- pmin(current_batches + 1, parameters$kmax)
     
     variables$hypnozoites$queue_update(
       new_batch_number,
@@ -426,15 +368,11 @@ relapse_bite_infection_hazard_resolution <- function(
 #' @param variables a list of all of the model variables
 #' @param infections bitset of infected humans
 #' @param parameters model parameters
-#' @param renderer model render
-#' @param timestep current timestep
 #' @noRd
 calculate_lm_det_infections <- function(
     variables,
     infections,
-    parameters,
-    renderer,
-    timestep
+    parameters
 ) {
   
   iaa <- variables$iaa$get_values(infections)
@@ -443,28 +381,7 @@ calculate_lm_det_infections <- function(
   philm <- anti_parasite_immunity(
     min = parameters$philm_min, max = parameters$philm_max, a50 = parameters$alm50,
     k = parameters$klm, iaa = iaa, iam = iam)
-  lm_det_infections <- bitset_at(infections, bernoulli_multi_p(philm))
-  
-  incidence_renderer(
-    variables$birth,
-    renderer,
-    lm_det_infections,
-    'inc_lm_det_',
-    parameters$lm_det_incidence_rendering_min_ages,
-    parameters$lm_det_incidence_rendering_max_ages,
-    timestep
-  )
-  incidence_probability_renderer(
-    variables$birth,
-    renderer,
-    infections,
-    philm,
-    'inc_lm_det_',
-    parameters$lm_det_incidence_rendering_min_ages,
-    parameters$lm_det_incidence_rendering_max_ages,
-    timestep
-  )
-  lm_det_infections
+  bitset_at(infections, bernoulli_multi_p(philm))
 }
 
 #' @title Calculate clinical infections

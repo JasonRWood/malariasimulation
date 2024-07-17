@@ -372,9 +372,11 @@ create_lagged_eir <- function(variables, solvers, parameters) {
 create_hypnozoite_batch_decay_process <- function(hypnozoites, gammal){
   function(timestep){
     to_decay <- bernoulli_multi_p(p = rate_to_prob(hypnozoites$get_values() * gammal))
-    hypnozoites$queue_update(
-      hypnozoites$get_values(to_decay) - 1,
-      to_decay
-    )
+    if(length(to_decay) > 0){
+      hypnozoites$queue_update(
+        hypnozoites$get_values(to_decay) - 1,
+        to_decay
+      )
+    }
   }
 }
