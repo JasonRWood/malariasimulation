@@ -33,7 +33,7 @@ create_biting_process <- function(
 ) {
   function(timestep){
     age <- get_age(variables$birth$get_values(), timestep)
-    bitten_humans <- simulate_bites(
+    bitten <- simulate_bites(
       renderer,
       solvers,
       models,
@@ -51,7 +51,8 @@ create_biting_process <- function(
     simulate_infection(
       variables,
       events,
-      bitten_humans,
+      bitten$bitten_humans,
+      bitten$n_bites_per_person,
       age,
       parameters,
       timestep,
@@ -76,6 +77,9 @@ simulate_bites <- function(
     mixing = 1,
     mixing_index = 1
 ) {
+
+  bitten_humans <- individual::Bitset$new(parameters$human_population)
+  n_bites_per_person <- numeric(0)
   
   human_infectivity <- variables$infectivity$get_values()
   if (parameters$tbv) {
@@ -143,11 +147,9 @@ simulate_bites <- function(
     renderer$render(paste0('EIR_', species_name), species_eir, timestep)
     EIR <- EIR + species_eir
     if(parameters$parasite == "falciparum"){
-      bitten_humans <- individual::Bitset$new(parameters$human_population)
       # p.f model factors eir by psi
       expected_bites <- species_eir * mean(psi)
     } else if (parameters$parasite == "vivax"){
-      bitten_humans <- individual::IntegerVariable$new(initial_values = rep(0, parameters$human_population))
       # p.v model standardises biting rate het to eir
       expected_bites <- species_eir
     }
@@ -156,15 +158,11 @@ simulate_bites <- function(
       n_bites <- rpois(1, expected_bites)
       if (n_bites > 0) {
         bitten <- fast_weighted_sample(n_bites, lambda)
-        if(parameters$parasite == "falciparum"){
-          bitten_humans$insert(bitten)
-          renderer$render('n_bitten', bitten_humans$size(), timestep)
-        }
+        bitten_humans$insert(bitten)
+        renderer$render('n_bitten', bitten_humans$size(), timestep)
         if(parameters$parasite == "vivax"){
           # p.v must pass through the number of bites per person
-          bites_per_person <- tabulate(bitten, nbins = length(lambda))
-          bitten_humans <- individual::IntegerVariable$new(initial_values = bites_per_person)
-          renderer$render('n_bitten', bitten_humans$get_size_of(!0), timestep)
+          n_bites_per_person <- tabulate(bitten, nbins = length(lambda))
         }
       }
     }
@@ -216,7 +214,7 @@ simulate_bites <- function(
     }
   }
 
-  bitten_humans
+  list(bitten_humans = bitten_humans, n_bites_per_person = n_bites_per_person)
 }
 
 
