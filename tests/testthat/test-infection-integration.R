@@ -17,6 +17,7 @@ test_that('simulate_infection integrates different types of infection and schedu
   )
   
   bitten <- individual::Bitset$new(population)$insert(c(1, 3, 5, 7))
+  n_bites_per_person <- numeric(0)
   boost_immunity_mock <- mockery::mock()
   infected <- individual::Bitset$new(population)$insert(c(1, 3, 5))
   infection_mock <- mockery::mock(infected)
@@ -35,6 +36,7 @@ test_that('simulate_infection integrates different types of infection and schedu
     variables,
     events,
     bitten,
+    n_bites_per_person,
     age,
     parameters,
     timestep,
@@ -57,6 +59,7 @@ test_that('simulate_infection integrates different types of infection and schedu
     1,
     variables,
     bitten,
+    n_bites_per_person,
     parameters,
     renderer,
     timestep,
@@ -216,6 +219,7 @@ test_that('calculate_infections works various combinations of drug and vaccinati
   )
   
   bitten_humans <- individual::Bitset$new(4)$insert(c(1, 2, 3, 4))
+  n_bites_per_person <- numeric(0)
   
   infection_outcome <- CompetingOutcome$new(
     targeted_process = function(timestep, target){
@@ -227,6 +231,7 @@ test_that('calculate_infections works various combinations of drug and vaccinati
   infections <- calculate_infections(
     variables,
     bitten_humans, 
+    n_bites_per_person,
     parameters,
     mock_render(timestep),
     timestep,
@@ -698,6 +703,7 @@ test_that('prophylaxis is considered for medicated humans', {
   )
   
   bitten <- individual::Bitset$new(4)$insert(seq(4))
+  n_bites_per_person <- numeric(0)
   m <- mockery::mock(seq(3))
   mockery::stub(calculate_infections, 'bernoulli_multi_p', m)
   
@@ -711,6 +717,7 @@ test_that('prophylaxis is considered for medicated humans', {
   infection_rates <- calculate_infections(
     variables,
     bitten,
+    n_bites_per_person,
     parameters,
     mock_render(timestep),
     timestep,
