@@ -242,6 +242,11 @@ populate_incidence_rendering_columns <- function(renderer, parameters){
     renderer$set_default('n_early_treatment_failure', 0)
     renderer$set_default('n_slow_parasite_clearance', 0)
   }
+
+  # relapses only render for the vivax model
+  if(parameters$parasite == "vivax"){
+    renderer$set_default('n_relapses', 0)
+  }
   
   if(length(parameters$incidence_rendering_min_ages)>0){
     render_initial_incidence(renderer,
