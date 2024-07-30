@@ -11,7 +11,8 @@
 #' interventions on Plasmodium vivax." by White, Michael T., et al. with parameter
 #' values found in "Accelerating towards P. vivax elimination with a novel
 #' serological test-and-treat strategy: a modelling case study in Brazil" by
-#' Nekkab, Narimane T.,et al. or online repository.
+#' Nekkab, Narimane T.,et al. or online repository:
+#' https://github.com/MWhite-InstitutPasteur/Pvivax_TQ_IBM.
 #'
 #' @param overrides a named list of parameter values to use instead of defaults
 #' @param parasite Plasmodium parasite species ("falciparum" or "vivax"); default = "falciparum"
@@ -280,8 +281,6 @@
 #' * incidence_rendering_min_ages - the minimum ages for incidence
 #' outputs (includes asymptomatic microscopy +); default = turned off
 #' * incidence_rendering_max_ages - the corresponding max ages; default = turned off
-#' * patent_incidence_rendering_min_ages - the minimum ages for patent incidence outputs (LM detectable), (p.v only); default = turned off
-#' * patent_incidence_rendering_max_ages - the corresponding max ages (p.v only); default = turned off
 #' * clinical_incidence_rendering_min_ages - the minimum ages for clinical incidence outputs (symptomatic); default = 0
 #' * clinical_incidence_rendering_max_ages - the corresponding max ages; default = 1825
 #' * severe_incidence_rendering_min_ages - the minimum ages for severe incidence
@@ -293,6 +292,8 @@
 #' * n_with_hypnozoites_rendering_min_ages - the minimum ages for number with hypnozoites outputs (p.v only); default = numeric(0)
 #' * n_with_hypnozoites_rendering_max_ages - the corresponding max ages; default = numeric(0)
 #'
+#' Age structured mean immunity (/hyponozoite) rendering:
+#' 
 #' * ib_rendering_min_ages - the minimum ages for blood immunity outputs (p.f only); default = numeric(0)
 #' * ib_rendering_max_ages - the corresponding max ages; default = numeric(0)
 #' * id_rendering_min_ages - the minimum ages for acquired detectability immunity (p.f); default = numeric(0)
@@ -311,8 +312,6 @@
 #' * ivm_rendering_max_ages - the corresponding max ages; default = numeric(0)
 #' * hypnozoites_rendering_min_ages - the minimum ages average hypnozoite batches outputs (p.v only); default = numeric(0)
 #' * hypnozoites_rendering_max_ages - the corresponding max ages; default = numeric(0)
-#' * n_with_hypnozoites_rendering_min_ages - the minimum ages average hypnozoite batches outputs (p.v only); default = numeric(0)
-#' * n_with_hypnozoites_rendering_max_ages - the corresponding max ages; default = numeric(0)
 #' 
 #' mixing:
 #'
@@ -474,14 +473,15 @@ get_parameters <- function(overrides = list(), parasite = "falciparum") {
       age_group_rendering_max_ages = numeric(0),
       incidence_rendering_min_ages = numeric(0),
       incidence_rendering_max_ages = numeric(0),
-      patent_incidence_rendering_min_ages = numeric(0),
-      patent_incidence_rendering_max_ages = numeric(0),
       clinical_incidence_rendering_min_ages = numeric(0),
       clinical_incidence_rendering_max_ages = numeric(0),
       severe_incidence_rendering_min_ages = numeric(0),
       severe_incidence_rendering_max_ages = numeric(0),
       prevalence_rendering_min_ages = 2 * 365,
       prevalence_rendering_max_ages = 10 * 365,
+      n_with_hypnozoites_rendering_min_ages = numeric(0),
+      n_with_hypnozoites_rendering_max_ages = numeric(0),
+      # age structured average immunity (/hypnozoite) rendering
       ib_rendering_min_ages = numeric(0),
       ib_rendering_max_ages = numeric(0),
       id_rendering_min_ages = numeric(0),
