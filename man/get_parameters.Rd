@@ -303,8 +303,6 @@ Please set rendered age groups using the convenience function
 \item incidence_rendering_min_ages - the minimum ages for incidence
 outputs (includes asymptomatic microscopy +); default = turned off
 \item incidence_rendering_max_ages - the corresponding max ages; default = turned off
-\item patent_incidence_rendering_min_ages - the minimum ages for patent incidence outputs (LM detectable), (p.v only); default = turned off
-\item patent_incidence_rendering_max_ages - the corresponding max ages (p.v only); default = turned off
 \item clinical_incidence_rendering_min_ages - the minimum ages for clinical incidence outputs (symptomatic); default = 0
 \item clinical_incidence_rendering_max_ages - the corresponding max ages; default = 1825
 \item severe_incidence_rendering_min_ages - the minimum ages for severe incidence
@@ -315,6 +313,10 @@ outputs; default = 730
 \item prevalence_rendering_max_ages - the corresponding max ages; default = 3650
 \item n_with_hypnozoites_rendering_min_ages - the minimum ages for number with hypnozoites outputs (p.v only); default = numeric(0)
 \item n_with_hypnozoites_rendering_max_ages - the corresponding max ages; default = numeric(0)
+}
+
+Age structured mean immunity (/hyponozoite) rendering:
+\itemize{
 \item ib_rendering_min_ages - the minimum ages for blood immunity outputs (p.f only); default = numeric(0)
 \item ib_rendering_max_ages - the corresponding max ages; default = numeric(0)
 \item id_rendering_min_ages - the minimum ages for acquired detectability immunity (p.f); default = numeric(0)
@@ -333,8 +335,6 @@ outputs; default = 730
 \item ivm_rendering_max_ages - the corresponding max ages; default = numeric(0)
 \item hypnozoites_rendering_min_ages - the minimum ages average hypnozoite batches outputs (p.v only); default = numeric(0)
 \item hypnozoites_rendering_max_ages - the corresponding max ages; default = numeric(0)
-\item n_with_hypnozoites_rendering_min_ages - the minimum ages average hypnozoite batches outputs (p.v only); default = numeric(0)
-\item n_with_hypnozoites_rendering_max_ages - the corresponding max ages; default = numeric(0)
 }
 
 mixing:
@@ -372,5 +372,6 @@ Plasmodium vivax specific parameters are explained in
 interventions on Plasmodium vivax." by White, Michael T., et al. with parameter
 values found in "Accelerating towards P. vivax elimination with a novel
 serological test-and-treat strategy: a modelling case study in Brazil" by
-Nekkab, Narimane T.,et al. or online repository.
+Nekkab, Narimane T.,et al. or online repository:
+https://github.com/MWhite-InstitutPasteur/Pvivax_TQ_IBM.
 }
