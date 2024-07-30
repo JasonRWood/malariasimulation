@@ -12,7 +12,7 @@
 #' boosted for tracking grace periods in the boost of immunity
 #' * ICM - Maternal immunity to clinical disease
 #' * IVM - Maternal immunity to severe disease
-#' * IB  - Pre-erythoctic immunity (p.f only)
+#' * IB  - Pre-erythrocytic immunity (p.f only)
 #' * ICA  - Acquired immunity to clinical disease
 #' * IVA  - Acquired immunity to severe disease
 #' * ID - Acquired immunity to detectability
