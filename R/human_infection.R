@@ -386,7 +386,7 @@ calculate_lm_det_infections <- function(
     min = parameters$philm_min, max = parameters$philm_max, a50 = parameters$alm50,
     k = parameters$klm, iaa = iaa, iam = iam)
 
-  lm_det_infections <- bitset_at(infections, bernoulli_multi_p(philm))
+  bitset_at(infections, bernoulli_multi_p(philm))
 }
 
 #' @title Calculate clinical infections

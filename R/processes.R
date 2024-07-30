@@ -191,7 +191,7 @@ create_processes <- function(
   if(parameters$parasite == "falciparum"){
     imm_var_names <- c(imm_var_names, 'ib', 'iva', 'ivm', 'id')
   } else if (parameters$parasite == "vivax"){
-    imm_var_names <- c(imm_var_names, 'iaa', 'iam','hypnozoites')
+    imm_var_names <- c(imm_var_names, 'iaa', 'iam', 'hypnozoites')
 
     ## hypnozoite infection prevalence rendering
     processes <- c(
