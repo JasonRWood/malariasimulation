@@ -154,19 +154,18 @@ infection_outcome_process <- function(
     parameters,
     prob){
   
-  incidence_renderer(
-    variables$birth,
-    renderer,
-    infected_humans,
-    'inc_',
-    parameters$incidence_rendering_min_ages,
-    parameters$incidence_rendering_max_ages,
-    timestep
-  )
-  
   if (infected_humans$size() > 0) {
     
     renderer$render('n_infections', infected_humans$size(), timestep)
+    incidence_renderer(
+      variables$birth,
+      renderer,
+      infected_humans,
+      'inc_',
+      parameters$incidence_rendering_min_ages,
+      parameters$incidence_rendering_max_ages,
+      timestep
+    )
     
     boost_immunity(
       variables$ica,
