@@ -80,7 +80,7 @@ immunity decay rates:
 immunity boost grace periods:
 \itemize{
 \item ub - period in which pre-erythrocytic immunity cannot be boosted (p.f only); default = 7.2
-\item ua - period in which anti-parasite immunity cannot be boosted (p.v only); default = 9.44512
+\item ua - period in which anti-parasite immunity cannot be boosted (p.v only); default = 19.77
 \item uc - period in which clinical immunity cannot be boosted; default = 6.06
 \item uv - period in which severe immunity cannot be boosted (p.f only); default = 11.4321
 \item ud - period in which immunity to detectability cannot be boosted (p.f only); default = 9.44512
@@ -126,10 +126,10 @@ probability of detection by light-microscopy when asymptomatic (p.f only):
 
 probability of patent infection due to anti-parasite immunity (p.v only):
 \itemize{
-\item phi0lm - maximum probability due to no immunity; default = 0.8918
-\item phi1lm - maximum reduction due to immunity; default = 0.00482170890334156
-\item ic0lm - scale parameter; default = 27.52
-\item kclm - shape parameter; default = 2.403
+\item philm_max - maximum probability due to no immunity; default = 0.8918
+\item philm_min - maximum reduction due to immunity; default = 0.0043
+\item alm50 - scale parameter; default = 27.52
+\item klm - shape parameter; default = 2.403
 }
 
 probability of clinical infection:

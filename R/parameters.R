@@ -78,7 +78,7 @@
 #' immunity boost grace periods:
 #'
 #' * ub - period in which pre-erythrocytic immunity cannot be boosted (p.f only); default = 7.2
-#' * ua - period in which anti-parasite immunity cannot be boosted (p.v only); default = 9.44512
+#' * ua - period in which anti-parasite immunity cannot be boosted (p.v only); default = 19.77
 #' * uc - period in which clinical immunity cannot be boosted; default = 6.06
 #' * uv - period in which severe immunity cannot be boosted (p.f only); default = 11.4321
 #' * ud - period in which immunity to detectability cannot be boosted (p.f only); default = 9.44512
@@ -117,10 +117,10 @@
 #'
 #' probability of patent infection due to anti-parasite immunity (p.v only):
 #'
-#' * phi0lm - maximum probability due to no immunity; default = 0.8918
-#' * phi1lm - maximum reduction due to immunity; default = 0.00482170890334156
-#' * ic0lm - scale parameter; default = 27.52
-#' * kclm - shape parameter; default = 2.403
+#' * philm_max - maximum probability due to no immunity; default = 0.8918
+#' * philm_min - maximum reduction due to immunity; default = 0.0043
+#' * alm50 - scale parameter; default = 27.52
+#' * klm - shape parameter; default = 2.403
 #' 
 #' probability of clinical infection:
 #'
@@ -609,6 +609,13 @@ parameterise_total_M <- function(parameters, total_M) {
 #'
 #' @export
 set_parameter_draw <- function(parameters, draw){
+  
+  if(parameters$parasite == "falciparum"){
+    parameter_draws <- parameter_draws_pf
+  } else if (parameters$parasite == "vivax"){
+    parameter_draws <- parameter_draws_pv
+  }
+  
   if(draw > 1000 || draw < 1){
     stop("draw must be an integer between 1 and 1000")
   }
