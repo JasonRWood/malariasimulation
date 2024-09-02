@@ -498,8 +498,6 @@ get_parameters <- function(overrides = list(), parasite = "falciparum") {
       ivm_rendering_max_ages = numeric(0),
       hypnozoites_rendering_min_ages = numeric(0),
       hypnozoites_rendering_max_ages = numeric(0),
-      n_with_hypnozoites_rendering_min_ages = numeric(0),
-      n_with_hypnozoites_rendering_max_ages = numeric(0),
       # mixing
       rdt_intercept = -0.968,
       rdt_coeff = 1.186,
