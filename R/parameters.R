@@ -625,6 +625,7 @@ set_parameter_draw <- function(parameters, draw){
   if(parameters$parasite == "falciparum"){
     parameter_draws <- parameter_draws_pf
   } else if (parameters$parasite == "vivax"){
+    stop("P. vivax parameter draws are not functional yet!")
     parameter_draws <- parameter_draws_pv
   }
   
