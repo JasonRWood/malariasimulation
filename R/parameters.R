@@ -3,8 +3,7 @@
 #' get_parameters creates a named list of parameters for use in the model. These
 #' parameters are passed to process functions. 
 #' 
-#' The default parameters, which
-#' are for Plasmodium falciparum, are explained in
+#' The default parameters, which are for Plasmodium falciparum, are explained in
 #' "The US President's Malaria Initiative, Plasmodium falciparum transmission
 #' and mortality: A modelling study."
 #'
@@ -352,6 +351,7 @@ get_parameters <- function(overrides = list(), parasite = "falciparum") {
     # parasite incubation periods
     # hypnozoite parameters (p.v only)
     malariasimulation::parasite_parameters[[parasite]],
+    
     list(
       # parasite
       parasite = parasite,
@@ -619,7 +619,7 @@ set_parameter_draw <- function(parameters, draw){
   
   if(parameters$parasite == "falciparum"){
     parameter_draws <- parameter_draws_pf
-    
+
   } else if (parameters$parasite == "vivax"){
     parameter_draws <- parameter_draws_pv
   }

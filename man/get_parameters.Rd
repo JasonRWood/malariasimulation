@@ -364,8 +364,7 @@ rates; default = TRUE
 get_parameters creates a named list of parameters for use in the model. These
 parameters are passed to process functions.
 
-The default parameters, which
-are for Plasmodium falciparum, are explained in
+The default parameters, which are for Plasmodium falciparum, are explained in
 "The US President's Malaria Initiative, Plasmodium falciparum transmission
 and mortality: A modelling study."
 
