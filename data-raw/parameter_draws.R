@@ -15,10 +15,9 @@ usethis::use_data(parameter_draws_pf, overwrite = TRUE)
 
 ## code to prepare parameter draws: pv
 ## this dataset does not match the default parameters, but the code should still be functional.
-pd_pv <- read.csv("data-raw/parameter_draws_pv.csv") |> 
+pd_pv <- read.csv("data-raw/parameter_draws_pv.csv", header = T) |> 
   tibble::rownames_to_column(var = "draw") |> 
-  dplyr::mutate(sigma_squared = sig_het) |> 
-  dplyr::select(-sig_het) |> 
+  dplyr::select(-loglike) |> 
   tidyr::pivot_longer(cols = !draw, names_to = "parameter", values_to = "value") |> 
   dplyr::mutate(parameter = dplyr::case_when(
     parameter == "u_par" ~ "ua",
@@ -36,9 +35,9 @@ pd_pv <- read.csv("data-raw/parameter_draws_pv.csv") |>
     parameter == "d_PCR_max" ~ "dpcr_max",
     parameter == "d_LM" ~ "da",
     parameter == "P_MI" ~ "pcm",
-    parameter == "d_MI" ~ "rm",
-    parameter == "sigma_squared" ~ parameter
-  )) |> 
+    parameter == "d_MI" ~ "rm"
+  ),
+  draw = as.numeric(draw)) |> 
   as.data.frame()
 
 # Split individual draws_pf into a list of named parameter lists

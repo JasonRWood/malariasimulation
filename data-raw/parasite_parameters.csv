@@ -49,43 +49,43 @@ falciparum,ct,0.021896,
 falciparum,de,12,
 falciparum,delay_gam,12.5,
 falciparum,dem,10,
-vivax,dd,5,
-vivax,dt,1,
-vivax,da,10,
-vivax,dpcr_max,70,
-vivax,dpcr_min,10,
-vivax,kpcr,4.602,
-vivax,apcr50,9.9,
+vivax,dd,5, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,dt,1, Pukrittayakamee (2008); Am J Trop Med Hyg
+vivax,da,16.942, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,dpcr_max,53.69, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,dpcr_min,10, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,kpcr,4.021, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,apcr50,9.8, White (2018); doi: 10.1038/s41467-018-05860-8
 vivax,init_iaa,0,
 vivax,init_iam,0,
 vivax,init_ica,0,
 vivax,init_icm,0,
-vivax,ra,3650,
-vivax,rc,10950,
-vivax,rm,35.148,
-vivax,ua,19.77,
-vivax,uc,7.85,
-vivax,pcm,0.421,
-vivax,b,0.5,
-vivax,philm_min,0.0043,
-vivax,philm_max,0.8918,
-vivax,klm,2.403,
-vivax,alm50,27.52,
-vivax,phi0,0.8605,
-vivax,phi1,0.020918070889018,
-vivax,ic0,11.538,
-vivax,kc,2.25,
-vivax,cd,0.8,
-vivax,ca,0.1,
-vivax,cu,0.035,
-vivax,ct,0.4,
-vivax,de,10,
-vivax,delay_gam,0,
-vivax,dem,8.4,
-vivax,f,0.02439024,
-vivax,gammal,0.002610966,
+vivax,ra,3650, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,rc,10950, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,rm,64.584, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,ua,44.09, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,uc,4.29, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,pcm,0.306, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,b,0.25, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,philm_min,0.0131, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,philm_max,0.9329, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,klm,3.202, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,alm50,17.30, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,phi0,4.2857, White (2018); doi: 10.1038/s41467-018-05860-8; phi0 is equivalent to phi_D_max (4.2857)
+vivax,phi1,0.2186, White (2018); doi: 10.1038/s41467-018-05860-8; phi1 is equivalent to phi_D_min/phi_D_max (0.9368/4.2857)
+vivax,ic0,23.788, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,kc,5.41, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,cd,0.8, Kiattibutr (2017); doi: 10.1016/j.ijpara.2016.10.006
+vivax,ca,0.1, Kiattibutr (2017); doi: 10.1016/j.ijpara.2016.10.006
+vivax,cu,0.035, Kiattibutr (2017); doi: 10.1016/j.ijpara.2016.10.006
+vivax,ct,0.4, Kiattibutr (2017); doi: 10.1016/j.ijpara.2016.10.006
+vivax,de,10, Herrera (2011); DOI: doi: 10.4269/ajtmh.2011.09-0498
+vivax,delay_gam,0, White (2018); doi: 10.1038/s41467-018-05860-8
+vivax,dem,8.4, Gething (2011); doi: 10.1186/1756-3305-4-92
+vivax,f,0.02439024, White (2018); doi: 10.1186/s12936-018-2318-1
+vivax,gammal,0.002610966, White (2018): doi: 10.1186/s12936-018-2318-1
 vivax,init_hyp,0,
-vivax,kmax,10
+vivax,kmax,10, White (2018); doi: 10.1038/s41467-018-05860-8
 vivax,du,110,to_be_removed
 vivax,init_iva,0,to_be_removed
 vivax,init_ivm,0,to_be_removed
