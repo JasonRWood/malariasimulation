@@ -164,6 +164,10 @@ run_verbose_simulation <- function(
     process_ind <- process_ind + 1
     parameters$treatment_base_value <- process_ind
     process_vector[process_ind] <- "Treated"
+    process_ind <- process_ind + 1
+    parameters$clinical_base_value <- process_ind
+    process_vector[process_ind] <- "Becomes_clinical"
+    process_ind <- process_ind + 1
   }
   parameters$output_env <- new.env(parent = emptyenv())
   parameters$output_env$n <- 0L

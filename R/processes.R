@@ -806,24 +806,26 @@ render_states_process <- function(variables, parameters){
       states <- variables$state$get_values(recording_people$to_vector())
       personal_inds <- variables$personal_tracker_index$get_values(recording_people$to_vector())
       n_new <- length(personal_inds)
-      store <- parameters$output_env
-      if (store$capacity < store$n + n_new){
-        store$capacity <- as.integer(2L*store$capacity)
-        length(store$timestep) <- store$capacity
-        length(store$individual_index) <- store$capacity
-        length(store$process_index) <- store$capacity
-        length(store$state_index) <- store$capacity
-        length(store$next_state_index) <- store$capacity
-      }
-      idx_start <- store$n + 1L
-      idx_end <- store$n + n_new
-      idx <- idx_start:idx_end
-      store$timestep[idx] <- as.integer(timestep)
-      store$individual_index[idx] <- as.integer(personal_inds)
-      store$process_index[idx] <- as.integer(parameters$states_base_value)
-      store$state_index[idx] <- as.integer(match(states, parameters$state_list))
-      store$next_state_index[idx] <- as.integer(match(states, parameters$state_list))
-      store$n <- idx_end
+      if(n_new){
+        store <- parameters$output_env
+        if (store$capacity < store$n + n_new){
+          store$capacity <- as.integer(2L*store$capacity)
+          length(store$timestep) <- store$capacity
+          length(store$individual_index) <- store$capacity
+          length(store$process_index) <- store$capacity
+          length(store$state_index) <- store$capacity
+          length(store$next_state_index) <- store$capacity
+        }
+        idx_start <- store$n + 1L
+        idx_end <- store$n + n_new
+        idx <- idx_start:idx_end
+        store$timestep[idx] <- as.integer(timestep)
+        store$individual_index[idx] <- as.integer(personal_inds)
+        store$process_index[idx] <- as.integer(parameters$states_base_value)
+        store$state_index[idx] <- as.integer(match(states, parameters$state_list))
+        store$next_state_index[idx] <- as.integer(match(states, parameters$state_list))
+        store$n <- idx_end
+    }
       # ages <- variables$birth$get_values(recording_people$to_vector)
       # print(ages)
       # flop
@@ -848,23 +850,25 @@ render_snapshot_process <- function(variables, parameters){
 
       
       n_new <- length(personal_inds)
-      store <- parameters$output_env
-      if (store$snapshot_capacity < store$snapshot_n + n_new){
-        store$snapshot_capacity <- as.integer(2L*store$snapshot_capacity)
-        length(store$snapshot_timesteps) <- store$snapshot_capacity
-        length(store$snapshot_individual_index) <- store$snapshot_capacity
-        length(store$snapshot_ages) <- store$snapshot_capacity
-        length(store$snapshot_states) <- store$snapshot_capacity
-      }
-      idx_start <- store$snapshot_n + 1L
-      idx_end <- store$snapshot_n + n_new
-      idx <- idx_start:idx_end
-      store$snapshot_timesteps[idx] <- as.integer(timestep)
-      store$snapshot_individual_index[idx] <- as.integer(personal_inds)
-      store$snapshot_ages[idx] <- as.integer(ages)
-      store$snapshot_states[idx] <- as.integer(match(states, parameters$state_list))
+      if(n_new){
+        store <- parameters$output_env
+        if (store$snapshot_capacity < store$snapshot_n + n_new){
+          store$snapshot_capacity <- as.integer(2L*store$snapshot_capacity)
+          length(store$snapshot_timesteps) <- store$snapshot_capacity
+          length(store$snapshot_individual_index) <- store$snapshot_capacity
+          length(store$snapshot_ages) <- store$snapshot_capacity
+          length(store$snapshot_states) <- store$snapshot_capacity
+        }
+        idx_start <- store$snapshot_n + 1L
+        idx_end <- store$snapshot_n + n_new
+        idx <- idx_start:idx_end
+        store$snapshot_timesteps[idx] <- as.integer(timestep)
+        store$snapshot_individual_index[idx] <- as.integer(personal_inds)
+        store$snapshot_ages[idx] <- as.integer(ages)
+        store$snapshot_states[idx] <- as.integer(match(states, parameters$state_list))
 
-      store$snapshot_n <- idx_end
+        store$snapshot_n <- idx_end
+      }
       # print_for_snapshot(parameters$snapshot_file_name, timestep, personal_inds, ages, match(states, parameters$state_list))
     }
   }

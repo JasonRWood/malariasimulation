@@ -420,6 +420,41 @@ falciparum_infection_outcome_process_verbose <- function(
       timestep
     )
     
+    # print(clinical$to_vector())
+    # print((timestep - variables$birth$get_values(clinical$to_vector()))/365)
+    if (parameters$infection_verbose){
+      min_birth <- timestep - parameters$upper_age_bound
+      max_birth <- timestep - parameters$lower_age_bound
+      if(clinical$size()){
+        if(timestep >= parameters$start_time){
+          recording_people <- clinical$copy()$and(variables$birth$get_index_of(a = min_birth, b = max_birth))
+          states <- variables$state$get_values(recording_people$to_vector())
+          personal_inds <- variables$personal_tracker_index$get_values(recording_people$to_vector())
+          n_new <- length(personal_inds)
+          if(n_new){
+            store <- parameters$output_env
+            if (store$capacity < store$n + n_new){
+              store$capacity <- as.integer(2L*store$capacity)
+              length(store$timestep) <- store$capacity
+              length(store$individual_index) <- store$capacity
+              length(store$process_index) <- store$capacity
+              length(store$state_index) <- store$capacity
+              length(store$next_state_index) <- store$capacity
+            }
+            idx_start <- store$n + 1L
+            idx_end <- store$n + n_new
+            idx <- idx_start:idx_end
+            store$timestep[idx] <- as.integer(timestep)
+            store$individual_index[idx] <- as.integer(personal_inds)
+            store$process_index[idx] <- as.integer(parameters$clinical_base_value)
+            store$state_index[idx] <- as.integer(match(states, parameters$state_list))
+            store$next_state_index[idx] <- as.integer(match(states, parameters$state_list))
+
+            store$n <- idx_end
+          }
+        }
+      }
+    }
     treated <- calculate_treated(
       variables,
       clinical,
@@ -438,25 +473,27 @@ falciparum_infection_outcome_process_verbose <- function(
           states <- variables$state$get_values(recording_people$to_vector())
           personal_inds <- variables$personal_tracker_index$get_values(recording_people$to_vector())
           n_new <- length(personal_inds)
-          store <- parameters$output_env
-          if (store$capacity < store$n + n_new){
-            store$capacity <- as.integer(2L*store$capacity)
-            length(store$timestep) <- store$capacity
-            length(store$individual_index) <- store$capacity
-            length(store$process_index) <- store$capacity
-            length(store$state_index) <- store$capacity
-            length(store$next_state_index) <- store$capacity
-          }
-          idx_start <- store$n + 1L
-          idx_end <- store$n + n_new
-          idx <- idx_start:idx_end
-          store$timestep[idx] <- as.integer(timestep)
-          store$individual_index[idx] <- as.integer(personal_inds)
-          store$process_index[idx] <- as.integer(parameters$treatment_base_value)
-          store$state_index[idx] <- as.integer(match(states, parameters$state_list))
-          store$next_state_index[idx] <- as.integer(match("Tr", parameters$state_list))
+          if(n_new){
+            store <- parameters$output_env
+            if (store$capacity < store$n + n_new){
+              store$capacity <- as.integer(2L*store$capacity)
+              length(store$timestep) <- store$capacity
+              length(store$individual_index) <- store$capacity
+              length(store$process_index) <- store$capacity
+              length(store$state_index) <- store$capacity
+              length(store$next_state_index) <- store$capacity
+            }
+            idx_start <- store$n + 1L
+            idx_end <- store$n + n_new
+            idx <- idx_start:idx_end
+            store$timestep[idx] <- as.integer(timestep)
+            store$individual_index[idx] <- as.integer(personal_inds)
+            store$process_index[idx] <- as.integer(parameters$treatment_base_value)
+            store$state_index[idx] <- as.integer(match(states, parameters$state_list))
+            store$next_state_index[idx] <- as.integer(match("Tr", parameters$state_list))
 
-          store$n <- idx_end
+            store$n <- idx_end
+          }
           # print_to_csv(parameters$file_name, timestep, personal_inds, parameters$treatment_base_value, match(states, parameters$state_list), match("Tr", parameters$state_list), parameters$start_time)
         }
       }
@@ -489,24 +526,27 @@ falciparum_infection_outcome_process_verbose <- function(
           states <- variables$state$get_values(recording_people$to_vector())
           personal_inds <- variables$personal_tracker_index$get_values(recording_people$to_vector())
           n_new <- length(personal_inds)
-          store <- parameters$output_env
-          if (store$capacity < store$n + n_new){
-            store$capacity <- as.integer(2L*store$capacity)
-            length(store$timestep) <- store$capacity
-            length(store$individual_index) <- store$capacity
-            length(store$process_index) <- store$capacity
-            length(store$state_index) <- store$capacity
-            length(store$next_state_index) <- store$capacity
+          
+          if(n_new){
+            store <- parameters$output_env
+            if (store$capacity < store$n + n_new){
+              store$capacity <- as.integer(2L*store$capacity)
+              length(store$timestep) <- store$capacity
+              length(store$individual_index) <- store$capacity
+              length(store$process_index) <- store$capacity
+              length(store$state_index) <- store$capacity
+              length(store$next_state_index) <- store$capacity
+            }
+            idx_start <- store$n + 1L
+            idx_end <- store$n + n_new
+            idx <- idx_start:idx_end
+            store$timestep[idx] <- as.integer(timestep)
+            store$individual_index[idx] <- as.integer(personal_inds)
+            store$process_index[idx] <- as.integer(parameters$infection_base_value)
+            store$state_index[idx] <- as.integer(match(states, parameters$state_list))
+            store$next_state_index[idx] <- as.integer(match("A", parameters$state_list))
+            store$n <- idx_end
           }
-          idx_start <- store$n + 1L
-          idx_end <- store$n + n_new
-          idx <- idx_start:idx_end
-          store$timestep[idx] <- as.integer(timestep)
-          store$individual_index[idx] <- as.integer(personal_inds)
-          store$process_index[idx] <- as.integer(parameters$infection_base_value)
-          store$state_index[idx] <- as.integer(match(states, parameters$state_list))
-          store$next_state_index[idx] <- as.integer(match("A", parameters$state_list))
-          store$n <- idx_end
 
           # print_to_csv(parameters$file_name, timestep, personal_inds, "Gone_to_A", states, parameters$start_time)
           # temp_df <- data.frame(
@@ -536,24 +576,26 @@ falciparum_infection_outcome_process_verbose <- function(
         states <- variables$state$get_values(recording_people$to_vector())
         personal_inds <- variables$personal_tracker_index$get_values(recording_people$to_vector())
         n_new <- length(personal_inds)
-        store <- parameters$output_env
-        if (store$capacity < store$n + n_new){
-          store$capacity <- as.integer(2L*store$capacity)
-          length(store$timestep) <- store$capacity
-          length(store$individual_index) <- store$capacity
-          length(store$process_index) <- store$capacity
-          length(store$state_index) <- store$capacity
-          length(store$next_state_index) <- store$capacity
+        if(n_new){
+          store <- parameters$output_env
+          if (store$capacity < store$n + n_new){
+            store$capacity <- as.integer(2L*store$capacity)
+            length(store$timestep) <- store$capacity
+            length(store$individual_index) <- store$capacity
+            length(store$process_index) <- store$capacity
+            length(store$state_index) <- store$capacity
+            length(store$next_state_index) <- store$capacity
+          }
+          idx_start <- store$n + 1L
+          idx_end <- store$n + n_new
+          idx <- idx_start:idx_end
+          store$timestep[idx] <- as.integer(timestep)
+          store$individual_index[idx] <- as.integer(personal_inds)
+          store$process_index[idx] <- as.integer(parameters$infection_base_value + 1)
+          store$state_index[idx] <- as.integer(match(states, parameters$state_list))
+          store$next_state_index[idx] <- as.integer(match("D", parameters$state_list))
+          store$n <- idx_end
         }
-        idx_start <- store$n + 1L
-        idx_end <- store$n + n_new
-        idx <- idx_start:idx_end
-        store$timestep[idx] <- as.integer(timestep)
-        store$individual_index[idx] <- as.integer(personal_inds)
-        store$process_index[idx] <- as.integer(parameters$infection_base_value + 1)
-        store$state_index[idx] <- as.integer(match(states, parameters$state_list))
-        store$next_state_index[idx] <- as.integer(match("D", parameters$state_list))
-        store$n <- idx_end
         # print_to_csv(parameters$file_name, timestep, personal_inds, "Gone_to_D", states, parameters$start_time)
         # print(match(states, parameters$state_list))
         # temp_df <- data.frame(
